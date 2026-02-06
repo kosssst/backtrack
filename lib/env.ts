@@ -8,6 +8,7 @@ export const env = {
 	APP_ORIGIN: mustUrl("APP_ORIGIN"),
 	DEBUG: verifyBoolean(process.env.DEBUG || 'false'),
 	LOG_LEVEL: verifyLogLevel(process.env.LOG_LEVEL),
+	MONGODB_URL: mustDBURL("MONGODB_URL"),
 }
 
 function must(name: string): string {
@@ -20,16 +21,22 @@ function mustUrl(name: string) {
 	const v = must(name);
 	try {
 		const url = new URL(v);
-		console.log(url.toString());
-		console.log(url.protocol, NODE_ENV);
 		if (url.protocol !== "https:" && NODE_ENV !== "development") {
-			console.log(url.protocol, NODE_ENV);
 			throw new Error(`${name} must use HTTPS in production`);
 		}
 		return v;
 	} catch (e) {
 		throw new Error(`${name} must be a valid URL, error: ${e}`);
 	}
+}
+
+function mustDBURL(name: string) {
+	const v = must(name);
+	try {
+		const url = new URL(v);
+		if (url.protocol === "mongodb:" || url.protocol === "mongodb+srv:") return v;
+	} catch {}
+	throw new Error(`${name} must be a valid MongoDB URL`);
 }
 
 function verifyBoolean(text: string) {
