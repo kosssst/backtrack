@@ -1,0 +1,43 @@
+.root {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--mantine-spacing-md);
+}
+
+.card {
+	width: 100%;
+	max-width: 420px;
+}
+
+.header {
+	text-align: center;
+	margin-bottom: var(--mantine-spacing-md);
+}
+
+.subtitle {
+	color: var(--mantine-color-dimmed);
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--mantine-spacing-md);
+	flex-wrap: wrap;
+	margin-top: var(--mantine-spacing-xs);
+}
+
+.fullWidthBtn {
+	flex: 1;
+	min-width: 160px;
+}
+
+.footer {
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-top: var(--mantine-spacing-sm);
+}

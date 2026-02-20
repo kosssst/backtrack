@@ -19,12 +19,12 @@ export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html lang="en" data-lt-installed="true" {...mantineHtmlProps}>
+		<html lang="en" {...mantineHtmlProps}>
 			<head>
 				<ColorSchemeScript />
 			</head>
 			<body>
-				<MantineProvider>
+				<MantineProvider withCssVariables withGlobalClasses>
 					<Notifications position="bottom-right" />
 					{children}
 				</MantineProvider>

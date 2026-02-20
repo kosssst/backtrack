@@ -1,11 +1,12 @@
 'use client';
+
 import {
 	Anchor,
 	Button,
-	Container,
-	Group,
 	Paper,
 	PasswordInput,
+	Stack,
+	Text,
 	TextInput,
 	Title,
 } from '@mantine/core';
@@ -20,6 +21,7 @@ import { SignUpFormData } from '@/types/auth.types';
 import { authClient } from '@/lib/auth-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
+import classes from '@/styles/AuthCard.module.css';
 
 export function RegisterForm() {
 	const router = useRouter();
@@ -41,17 +43,13 @@ export function RegisterForm() {
 	});
 
 	const handleSubmit = async () => {
-		if (!form.isValid()) {
-			form.validate();
-			return;
-		}
-
 		const { repeatPassword: _repeatPassword, ...dataToSend } = form.getValues();
+
 		await authClient.signUp.email(dataToSend, {
 			onError: () => {
 				notifications.show({
 					title: 'Registration failed',
-					message: '',
+					message: 'Please check your details and try again.',
 					color: 'red',
 				});
 			},
@@ -63,53 +61,82 @@ export function RegisterForm() {
 	};
 
 	return (
-		<Container>
-			<Title order={1}>Register</Title>
-			<Paper>
-				<TextInput
-					label="Name"
-					placeholder="John Doe"
-					required
-					radius="md"
-					key={form.key('name')}
-					{...form.getInputProps('name')}
-				/>
-				<TextInput
-					label="Email"
-					placeholder="you@gmail.com"
-					required
-					mt="md"
-					radius="md"
-					key={form.key('email')}
-					{...form.getInputProps('email')}
-				/>
-				<PasswordInput
-					label="Password"
-					type="password"
-					placeholder="Your password"
-					required
-					mt="md"
-					radius="md"
-					key={form.key('password')}
-					{...form.getInputProps('password')}
-				/>
-				<PasswordInput
-					label="Repeat password"
-					type="password"
-					placeholder="Your password again"
-					required
-					mt="md"
-					radius="md"
-					key={form.key('repeatPassword')}
-					{...form.getInputProps('repeatPassword')}
-				/>
-				<Group>
-					<Button mt="xl" radius="md" onClick={handleSubmit}>
-						Sign up
-					</Button>
-					Already have an account? <Anchor href="/login">Sign in</Anchor>
-				</Group>
+		<div className={classes.root}>
+			<Paper className={classes.card} withBorder shadow="md" radius="lg" p="xl">
+				<div className={classes.header}>
+					<Title order={2}>Create an account</Title>
+					<Text size="sm" className={classes.subtitle} mt={4}>
+						Sign up to get started
+					</Text>
+				</div>
+
+				<form
+					onSubmit={form.onSubmit(async () => {
+						if (!form.isValid()) {
+							form.validate();
+							return;
+						}
+						await handleSubmit();
+					})}
+				>
+					<Stack gap="md">
+						<TextInput
+							label="Name"
+							placeholder="John Doe"
+							required
+							radius="md"
+							key={form.key('name')}
+							{...form.getInputProps('name')}
+						/>
+
+						<TextInput
+							label="Email"
+							placeholder="you@gmail.com"
+							required
+							radius="md"
+							key={form.key('email')}
+							{...form.getInputProps('email')}
+						/>
+
+						<PasswordInput
+							label="Password"
+							placeholder="Your password"
+							required
+							radius="md"
+							key={form.key('password')}
+							{...form.getInputProps('password')}
+						/>
+
+						<PasswordInput
+							label="Repeat password"
+							placeholder="Your password again"
+							required
+							radius="md"
+							key={form.key('repeatPassword')}
+							{...form.getInputProps('repeatPassword')}
+						/>
+
+						<div className={classes.actions}>
+							<Button
+								type="submit"
+								radius="md"
+								className={classes.fullWidthBtn}
+							>
+								Sign up
+							</Button>
+						</div>
+
+						<div className={classes.footer}>
+							<Text size="sm" c="dimmed">
+								Already have an account?
+							</Text>
+							<Anchor href="/login" size="sm">
+								Sign in
+							</Anchor>
+						</div>
+					</Stack>
+				</form>
 			</Paper>
-		</Container>
+		</div>
 	);
 }
