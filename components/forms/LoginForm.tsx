@@ -13,9 +13,11 @@ import {
 import { hasLength, isEmail, useForm } from '@mantine/form';
 import { authClient } from '@/lib/auth-client';
 import { notifications } from '@mantine/notifications';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export function LoginForm() {
+	const router = useRouter();
+
 	const form = useForm({
 		mode: 'controlled',
 		initialValues: {
@@ -45,7 +47,8 @@ export function LoginForm() {
 				});
 			},
 			onSuccess: () => {
-				redirect('/');
+				router.replace('/');
+				router.refresh();
 			},
 		});
 	};

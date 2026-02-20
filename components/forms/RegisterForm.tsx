@@ -19,9 +19,11 @@ import {
 import { SignUpFormData } from '@/types/auth.types';
 import { authClient } from '@/lib/auth-client';
 import { notifications } from '@mantine/notifications';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export function RegisterForm() {
+	const router = useRouter();
+
 	const form = useForm<SignUpFormData>({
 		mode: 'controlled',
 		initialValues: {
@@ -54,7 +56,8 @@ export function RegisterForm() {
 				});
 			},
 			onSuccess: () => {
-				redirect('/');
+				router.replace('/');
+				router.refresh();
 			},
 		});
 	};
