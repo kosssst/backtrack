@@ -1,15 +1,24 @@
 'use client';
 import { authClient } from '@/lib/auth-client';
 import { redirect } from 'next/navigation';
-import { Button, Modal } from '@mantine/core';
+import { Button, Container, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { CreatePostForm } from '@/components/forms/CreatePostForm';
+import { PostsList } from '@/components/lists/PostsList';
+import { useState } from 'react';
 
 export default function Home() {
 	const [opened, { open, close }] = useDisclosure(false);
+	const [reloadKey, setReloadKey] = useState(0);
+
 	const { data: session, isPending } = authClient.useSession();
 	if (isPending) return <h1>Loading...</h1>;
 	if (!session) redirect('/login');
+
+	const handleCreated = () => {
+		close();
+		setReloadKey((k) => k + 1);
+	};
 
 	return (
 		<>
@@ -21,12 +30,17 @@ export default function Home() {
 						<Modal.CloseButton />
 					</Modal.Header>
 					<Modal.Body>
-						<CreatePostForm onSuccess={close} />
+						<CreatePostForm onSuccess={handleCreated} />
 					</Modal.Body>
 				</Modal.Content>
 			</Modal.Root>
 
-			<Button onClick={open}>Create post</Button>
+			<Container size="md" px="md">
+				<Button onClick={open} mb="md">
+					Create post
+				</Button>
+				<PostsList reloadKey={reloadKey} />
+			</Container>
 		</>
 	);
 }

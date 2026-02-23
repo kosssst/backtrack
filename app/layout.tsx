@@ -26,7 +26,7 @@ export default function RootLayout({
 			<body>
 				<MantineProvider withCssVariables withGlobalClasses>
 					<Notifications position="bottom-right" />
-					{children}
+					<div className="appShell">{children}</div>
 				</MantineProvider>
 			</body>
 		</html>
