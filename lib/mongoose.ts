@@ -2,13 +2,16 @@ import 'server-only';
 import mongoose from 'mongoose';
 import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
-import {MongooseCache} from "@/types/mongoose.types";
+import { MongooseCache } from '@/types/mongoose.types';
 
 declare global {
 	var mongooseCache: MongooseCache | undefined;
 }
 
-const cache: MongooseCache = global.mongooseCache ?? { conn: null, promise: null };
+const cache: MongooseCache = global.mongooseCache ?? {
+	conn: null,
+	promise: null,
+};
 global.mongooseCache = cache;
 
 mongoose.set('strictQuery', true);

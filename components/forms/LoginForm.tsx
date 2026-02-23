@@ -14,7 +14,7 @@ import { hasLength, isEmail, useForm } from '@mantine/form';
 import { authClient } from '@/lib/auth-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
-import classes from '@/styles/AuthCard.module.css';
+import classes from '@/styles/form.module.css';
 
 export function LoginForm() {
 	const router = useRouter();

@@ -9,7 +9,7 @@ const PostSchema = new Schema(
 
 		authorId: { type: String, required: true, index: true },
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 export type PostEntity = InferSchemaType<typeof PostSchema>;

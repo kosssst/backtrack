@@ -1,7 +1,7 @@
-import {auth} from "@/lib/auth";
-import {NextResponse} from "next/server";
-import {connectMongoose} from "@/lib/mongoose";
-import {Posts} from "@/models/posts.model";
+import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { connectMongoose } from '@/lib/mongoose';
+import { Posts } from '@/models/posts.model';
 
 export const runtime = 'nodejs';
 
@@ -52,19 +52,22 @@ export async function GET(req: Request) {
 
 	const { searchParams } = new URL(req.url);
 
-	const limit = Math.min(Math.max(toIntParam(searchParams.get('limit'), 20), 1), 100);
+	const limit = Math.min(
+		Math.max(toIntParam(searchParams.get('limit'), 20), 1),
+		100,
+	);
 	const page = Math.max(toIntParam(searchParams.get('page'), 1), 1);
 
 	const total = await Posts.countDocuments();
 	const maxPage = Math.max(1, Math.ceil(total / limit));
 
 	if (page > maxPage) {
-		return NextResponse.json({message: "invalid page"}, {status: 400});
+		return NextResponse.json({ message: 'invalid page' }, { status: 400 });
 	}
 
 	const skip = (page - 1) * limit;
 
-	const posts = await Posts.find({authorId: authorId})
+	const posts = await Posts.find({ authorId: authorId })
 		.sort({ createdAt: -1 })
 		.skip(skip)
 		.limit(limit)
