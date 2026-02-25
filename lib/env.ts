@@ -9,6 +9,7 @@ export const env = {
 	DEBUG: verifyBoolean(process.env.DEBUG || 'false'),
 	LOG_LEVEL: verifyLogLevel(process.env.LOG_LEVEL),
 	MONGODB_URL: mustDBURL('MONGODB_URL'),
+	ENCRYPTION_KEY: mustBase64Key32('ENCRYPTION_KEY'),
 };
 
 function must(name: string): string {
@@ -49,4 +50,20 @@ function verifyLogLevel(text: string | undefined): LogLevel | null {
 	return (validLogLevels as readonly string[]).includes(text)
 		? (text as LogLevel)
 		: null;
+}
+
+function mustBase64Key32(name: string): Buffer {
+	const s = must(name).trim();
+
+	const buf = Buffer.from(s, 'base64');
+
+	if (buf.toString('base64') !== s) {
+		throw new Error(`${name} is not strict base64`);
+	}
+
+	if (buf.length !== 32) {
+		throw new Error(`${name} must decode to 32 bytes (got ${buf.length})`);
+	}
+
+	return buf;
 }

@@ -1,7 +1,9 @@
-import { auth } from '@/lib/auth';
+import { auth } from '@/lib/auth/auth';
 import { NextResponse } from 'next/server';
-import { connectMongoose } from '@/lib/mongoose';
+import { connectMongoose } from '@/lib/db/mongoose';
 import { Posts } from '@/models/posts.model';
+import { decrypt, encrypt } from '@/lib/encryption/aes-265-gcm';
+import { AES256GCMEncryptedData } from '@/types/encryption.types';
 
 export const runtime = 'nodejs';
 
@@ -29,15 +31,18 @@ export async function POST(req: Request) {
 		return NextResponse.json({ message: 'Invalid content' }, { status: 400 });
 	}
 
+	const titleEnc = await encrypt(title, session.user.id);
+	const bodyEnc = await encrypt(body, session.user.id);
+
 	await connectMongoose();
 
 	const post = await Posts.create({
-		title: title,
-		body: body,
+		titleEnc: { v: 1, ...titleEnc },
+		bodyEnc: { v: 1, ...bodyEnc },
 		authorId: session.user.id,
 	});
 
-	return NextResponse.json(post, { status: 201 });
+	return NextResponse.json({ _id: post._id }, { status: 201 });
 }
 
 export async function GET(req: Request) {
@@ -58,7 +63,7 @@ export async function GET(req: Request) {
 	);
 	const page = Math.max(toIntParam(searchParams.get('page'), 1), 1);
 
-	const total = await Posts.countDocuments();
+	const total = await Posts.countDocuments({ authorId: authorId });
 	const maxPage = Math.max(1, Math.ceil(total / limit));
 
 	if (page > maxPage) {
@@ -67,11 +72,27 @@ export async function GET(req: Request) {
 
 	const skip = (page - 1) * limit;
 
-	const posts = await Posts.find({ authorId: authorId })
+	const postsEnc = await Posts.find({ authorId: authorId })
 		.sort({ createdAt: -1 })
 		.skip(skip)
-		.limit(limit)
-		.lean();
+		.limit(limit);
+
+	const posts = await Promise.all(
+		postsEnc.map(async (doc) => {
+			const obj = doc.toObject();
+
+			const { titleEnc, bodyEnc, ...rest } = obj;
+
+			const title = await decrypt(titleEnc as AES256GCMEncryptedData, authorId);
+			const body = await decrypt(bodyEnc as AES256GCMEncryptedData, authorId);
+
+			return {
+				...rest,
+				title,
+				body,
+			};
+		}),
+	);
 
 	return NextResponse.json({
 		posts,

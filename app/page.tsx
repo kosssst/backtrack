@@ -1,5 +1,5 @@
 'use client';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 import { redirect } from 'next/navigation';
 import { Button, Container, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';

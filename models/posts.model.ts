@@ -1,11 +1,13 @@
 import 'server-only';
 
 import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
+import { EncFieldSchema } from '@/models/encField.schema';
 
 const PostSchema = new Schema(
 	{
-		title: { type: String, required: true, trim: true, maxlength: 200 },
-		body: { type: String, required: true, trim: true, maxlength: 20_000 },
+		titleEnc: { type: EncFieldSchema, required: true },
+
+		bodyEnc: { type: EncFieldSchema, required: true },
 
 		authorId: { type: String, required: true, index: true },
 	},

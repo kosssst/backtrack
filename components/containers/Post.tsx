@@ -1,6 +1,6 @@
 import { PostInterface } from '@/types/posts.types';
 import { Paper, Stack, Title, Text } from '@mantine/core';
-import { formatPostDate } from '@/lib/format-date';
+import { formatPostDate } from '@/lib/utils/format-date';
 
 export function Post({ title, body, createdAt }: PostInterface) {
 	return (

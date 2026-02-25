@@ -18,7 +18,7 @@ import {
 	useForm,
 } from '@mantine/form';
 import { SignUpFormData } from '@/types/auth.types';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import classes from '@/styles/form.module.css';

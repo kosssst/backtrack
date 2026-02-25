@@ -11,7 +11,7 @@ import {
 	Title,
 } from '@mantine/core';
 import { hasLength, isEmail, useForm } from '@mantine/form';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/lib/auth/auth-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import classes from '@/styles/form.module.css';
