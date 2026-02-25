@@ -1,4 +1,5 @@
 import { PostsResponse } from '@/types/posts.types';
+import { DateValue } from '@mantine/dates';
 
 export async function createPost(input: { title: string; body: string }) {
 	const res = await fetch('/api/posts', {
@@ -12,11 +13,21 @@ export async function createPost(input: { title: string; body: string }) {
 	return res.json();
 }
 
-export async function getPosts(params?: { page?: number; limit?: number }) {
+export async function getPosts(params?: {
+	page?: number;
+	limit?: number;
+	from?: DateValue;
+	to?: DateValue;
+}) {
 	const page = params?.page ?? 1;
 	const limit = params?.limit ?? 20;
 
-	const res = await fetch(`/api/posts?page=${page}&limit=${limit}`, {
+	let url = `/api/posts?page=${page}&limit=${limit}`;
+
+	if (params?.from && params?.to)
+		url += `&from=${params?.from.toString()}&to=${params?.to.toString()}`;
+
+	const res = await fetch(url, {
 		method: 'GET',
 		credentials: 'include',
 	});

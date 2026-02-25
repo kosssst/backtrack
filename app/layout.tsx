@@ -3,6 +3,7 @@ import '../styles/globals.css';
 import React from 'react';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 import {
 	ColorSchemeScript,
 	MantineProvider,

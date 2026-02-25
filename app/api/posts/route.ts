@@ -4,6 +4,10 @@ import { connectMongoose } from '@/lib/db/mongoose';
 import { Posts } from '@/models/posts.model';
 import { decrypt, encrypt } from '@/lib/encryption/aes-265-gcm';
 import { AES256GCMEncryptedData } from '@/types/encryption.types';
+import {
+	toISODateWithEndOfDay,
+	toISODateWithStartOfDay,
+} from '@/lib/utils/format-date';
 
 export const runtime = 'nodejs';
 
@@ -62,8 +66,16 @@ export async function GET(req: Request) {
 		100,
 	);
 	const page = Math.max(toIntParam(searchParams.get('page'), 1), 1);
+	const from = toISODateWithStartOfDay(searchParams.get('from'));
+	const to = toISODateWithEndOfDay(searchParams.get('to'));
 
-	const total = await Posts.countDocuments({ authorId: authorId });
+	const total =
+		from && to
+			? await Posts.countDocuments({
+					authorId: authorId,
+					createdAt: { $gte: from, $lte: to },
+				})
+			: await Posts.countDocuments({ authorId: authorId });
 	const maxPage = Math.max(1, Math.ceil(total / limit));
 
 	if (page > maxPage) {
@@ -72,10 +84,19 @@ export async function GET(req: Request) {
 
 	const skip = (page - 1) * limit;
 
-	const postsEnc = await Posts.find({ authorId: authorId })
-		.sort({ createdAt: -1 })
-		.skip(skip)
-		.limit(limit);
+	const postsEnc =
+		from && to
+			? await Posts.find({
+					authorId: authorId,
+					createdAt: { $gte: from, $lte: to },
+				})
+					.sort({ createdAt: -1 })
+					.skip(skip)
+					.limit(limit)
+			: await Posts.find({ authorId: authorId })
+					.sort({ createdAt: -1 })
+					.skip(skip)
+					.limit(limit);
 
 	const posts = await Promise.all(
 		postsEnc.map(async (doc) => {

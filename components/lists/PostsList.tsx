@@ -9,7 +9,10 @@ import { Center, Loader, Stack, Text } from '@mantine/core';
 import { Post } from '@/components/containers/Post';
 import { PostsListProps } from '@/types/props.types';
 
-export function PostsList({ reloadKey = 0 }: PostsListProps) {
+export function PostsList({
+	reloadKey = 0,
+	dateRange = [null, null],
+}: PostsListProps) {
 	const [posts, setPosts] = useState<PostInterface[]>([]);
 	const [page, setPage] = useState(1);
 	const [maxPage, setMaxPage] = useState<number | null>(null);
@@ -25,37 +28,46 @@ export function PostsList({ reloadKey = 0 }: PostsListProps) {
 
 	const { ref: sentinelRef, entry } = useIntersection({ threshold: 1 });
 
-	const loadPage = useCallback(async (targetPage: number) => {
-		if (loadingRef.current) return;
-		if (maxPageRef.current !== null && targetPage > maxPageRef.current) return;
+	const loadPage = useCallback(
+		async (targetPage: number) => {
+			if (loadingRef.current) return;
+			if (maxPageRef.current !== null && targetPage > maxPageRef.current)
+				return;
 
-		loadingRef.current = true;
+			loadingRef.current = true;
 
-		setLoading(true);
+			setLoading(true);
 
-		try {
-			const data = await getPosts({ page: targetPage, limit: 20 });
+			try {
+				const data = await getPosts({
+					page: targetPage,
+					limit: 20,
+					from: dateRange[0],
+					to: dateRange[1],
+				});
 
-			maxPageRef.current = data.maxPage;
-			setMaxPage(data.maxPage);
-			setPage(data.page);
-			setPosts((prev) => {
-				const seen = new Set(prev.map((p) => p._id));
-				const next = data.posts.filter((p) => !seen.has(p._id));
-				return [...prev, ...next];
-			});
-		} catch (error) {
-			console.error(error);
-			notifications.show({
-				title: 'Error',
-				message: 'Failed to fetch posts',
-				color: 'red',
-			});
-		} finally {
-			loadingRef.current = false;
-			setLoading(false);
-		}
-	}, []);
+				maxPageRef.current = data.maxPage;
+				setMaxPage(data.maxPage);
+				setPage(data.page);
+				setPosts((prev) => {
+					const seen = new Set(prev.map((p) => p._id));
+					const next = data.posts.filter((p) => !seen.has(p._id));
+					return [...prev, ...next];
+				});
+			} catch (error) {
+				console.error(error);
+				notifications.show({
+					title: 'Error',
+					message: 'Failed to fetch posts',
+					color: 'red',
+				});
+			} finally {
+				loadingRef.current = false;
+				setLoading(false);
+			}
+		},
+		[dateRange],
+	);
 
 	useEffect(() => {
 		setPosts([]);
@@ -90,7 +102,7 @@ export function PostsList({ reloadKey = 0 }: PostsListProps) {
 				</Center>
 			)}
 
-			{!hasMore && posts.length > 0 && (
+			{!hasMore && (
 				<Text c="dimmed" ta="center">
 					No more posts
 				</Text>

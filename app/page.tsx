@@ -1,15 +1,17 @@
 'use client';
 import { authClient } from '@/lib/auth/auth-client';
 import { redirect } from 'next/navigation';
-import { Button, Container, Modal } from '@mantine/core';
+import { Button, Container, Group, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { CreatePostForm } from '@/components/forms/CreatePostForm';
 import { PostsList } from '@/components/lists/PostsList';
 import { useState } from 'react';
+import { DatePickerInput, DatesRangeValue } from '@mantine/dates';
 
 export default function Home() {
 	const [opened, { open, close }] = useDisclosure(false);
 	const [reloadKey, setReloadKey] = useState(0);
+	const [dateRange, setDateRange] = useState<DatesRangeValue>([null, null]);
 
 	const { data: session, isPending } = authClient.useSession();
 	if (isPending) return <h1>Loading...</h1>;
@@ -36,10 +38,22 @@ export default function Home() {
 			</Modal.Root>
 
 			<Container size="md" px="md">
-				<Button onClick={open} mb="md">
-					Create post
-				</Button>
-				<PostsList reloadKey={reloadKey} />
+				<Group justify="space-between" align="center" mb="md">
+					<Button onClick={open}>Create post</Button>
+					<DatePickerInput
+						style={{ flex: 1, maxWidth: 220 }}
+						allowSingleDateInRange
+						clearable
+						type="range"
+						value={dateRange}
+						onChange={setDateRange}
+						valueFormat="DD.MM.YYYY"
+						label="Pick time range"
+						placeholder="Pick dates"
+						maxDate={new Date()}
+					/>
+				</Group>
+				<PostsList reloadKey={reloadKey} dateRange={dateRange} />
 			</Container>
 		</>
 	);
