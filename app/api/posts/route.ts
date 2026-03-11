@@ -1,4 +1,3 @@
-import { auth } from '@/lib/auth/auth';
 import { NextResponse } from 'next/server';
 import { connectMongoose } from '@/lib/db/mongoose';
 import { Posts } from '@/models/posts.model';
@@ -8,6 +7,7 @@ import {
 	toISODateWithEndOfDay,
 	toISODateWithStartOfDay,
 } from '@/lib/utils/format-date';
+import {requireApiSession} from "@/lib/auth/require-api-session";
 
 export const runtime = 'nodejs';
 
@@ -19,9 +19,9 @@ function toIntParam(value: string | null, fallback: number) {
 }
 
 export async function POST(req: Request) {
-	const session = await auth.api.getSession({ headers: req.headers });
+	const { session, errorResponse } = await requireApiSession(req);
 	if (!session) {
-		return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+		return errorResponse;
 	}
 
 	const data = await req.json().catch(() => null);
@@ -50,9 +50,9 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-	const session = await auth.api.getSession({ headers: req.headers });
+	const { session, errorResponse } = await requireApiSession(req);
 	if (!session) {
-		return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+		return errorResponse;
 	}
 
 	const authorId = session.user.id;
