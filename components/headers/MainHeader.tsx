@@ -2,11 +2,11 @@
 
 import { Container, Image } from '@mantine/core';
 import { UserCardSmall } from '@/components/containers/UserCardSmall';
-import { MainHeaderProps } from '@/types/props.types';
+import { UserProps } from '@/types/props.types';
 import classes from '@/styles/MainHeader.module.css';
 import Link from 'next/link';
 
-export function MainHeader({ user }: MainHeaderProps) {
+export function MainHeader({ user }: UserProps) {
 	return (
 		<header className={classes.header}>
 			<Container size="lg" className={classes.container}>
@@ -22,7 +22,7 @@ export function MainHeader({ user }: MainHeaderProps) {
 						/>
 					</Link>
 					<Link href="/profile" className={classes.profileLink}>
-						<UserCardSmall name={user.name} email={user.email} />
+						<UserCardSmall user={user} />
 					</Link>
 				</div>
 			</Container>

@@ -19,14 +19,9 @@ export interface AuthFormProps {
 	redirectTo: string;
 }
 
-export interface MainHeaderProps {
+export interface UserProps {
 	user: {
 		name: string;
 		email: string;
 	};
-}
-
-export interface UserCardProps {
-	name: string;
-	email: string;
 }
