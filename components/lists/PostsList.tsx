@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getPosts } from '@/lib/api/posts.client';
 import { notifications } from '@mantine/notifications';
 import { useIntersection } from '@mantine/hooks';
-import { Center, Loader, Stack, Text } from '@mantine/core';
+import { Center, Loader, Stack } from '@mantine/core';
 import { Post } from '@/components/containers/Post';
 import { PostsListProps } from '@/types/props.types';
 
@@ -100,12 +100,6 @@ export function PostsList({
 				<Center>
 					<Loader />
 				</Center>
-			)}
-
-			{!hasMore && (
-				<Text c="dimmed" ta="center">
-					No more posts
-				</Text>
 			)}
 		</Stack>
 	);
