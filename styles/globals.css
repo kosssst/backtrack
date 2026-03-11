@@ -26,13 +26,8 @@ a {
 	width: 100%;
 	max-width: 920px;
 	margin: 0 auto;
-	padding: 16px;
-}
-
-@media (min-width: 768px) {
-	.appShell {
-		padding: 24px;
-	}
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 @media (min-width: 1200px) {

@@ -18,3 +18,15 @@ export interface AuthPageProps {
 export interface AuthFormProps {
 	redirectTo: string;
 }
+
+export interface MainHeaderProps {
+	user: {
+		name: string;
+		email: string;
+	};
+}
+
+export interface UserCardProps {
+	name: string;
+	email: string;
+}

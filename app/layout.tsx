@@ -25,7 +25,11 @@ export default function RootLayout({
 				<ColorSchemeScript />
 			</head>
 			<body>
-				<MantineProvider withCssVariables withGlobalClasses>
+				<MantineProvider
+					withCssVariables
+					withGlobalClasses
+					defaultColorScheme={'dark'}
+				>
 					<Notifications position="bottom-right" />
 					<div className="appShell">{children}</div>
 				</MantineProvider>
