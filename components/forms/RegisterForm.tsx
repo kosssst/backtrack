@@ -22,8 +22,9 @@ import { authClient } from '@/lib/auth/auth-client';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import classes from '@/styles/form.module.css';
+import { AuthFormProps } from '@/types/props.types';
 
-export function RegisterForm() {
+export function RegisterForm({ redirectTo }: AuthFormProps) {
 	const router = useRouter();
 
 	const form = useForm<SignUpFormData>({
@@ -54,7 +55,7 @@ export function RegisterForm() {
 				});
 			},
 			onSuccess: () => {
-				router.replace('/');
+				router.replace(redirectTo);
 				router.refresh();
 			},
 		});

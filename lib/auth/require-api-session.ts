@@ -1,5 +1,5 @@
-import {auth} from "@/lib/auth/auth";
-import {NextResponse} from "next/server";
+import { auth } from '@/lib/auth/auth';
+import { NextResponse } from 'next/server';
 
 export async function requireApiSession(request: Request) {
 	const session = await auth.api.getSession({
@@ -11,13 +11,13 @@ export async function requireApiSession(request: Request) {
 			session: null,
 			errorResponse: NextResponse.json(
 				{ error: 'Unauthorized' },
-				{ status: 401 }
-			)
+				{ status: 401 },
+			),
 		};
 	}
 
 	return {
 		session,
 		errorResponse: null,
-	}
+	};
 }

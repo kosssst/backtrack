@@ -7,7 +7,7 @@ import {
 	toISODateWithEndOfDay,
 	toISODateWithStartOfDay,
 } from '@/lib/utils/format-date';
-import {requireApiSession} from "@/lib/auth/require-api-session";
+import { requireApiSession } from '@/lib/auth/require-api-session';
 
 export const runtime = 'nodejs';
 

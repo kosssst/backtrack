@@ -1,6 +1,3 @@
 export function MainHeader() {
-	return (
-		<>
-		</>
-	);
+	return <></>;
 }
