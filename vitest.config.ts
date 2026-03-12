@@ -1,3 +1,4 @@
+// vitest.config.ts
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -20,5 +21,13 @@ export default defineConfig({
 		restoreMocks: true,
 		maxWorkers: 1,
 		fileParallelism: false,
+
+		coverage: {
+			reporter: ['text', 'html'],
+			exclude: [
+				'src/styles/**',
+				'**/*.module.css',
+			],
+		},
 	},
 });

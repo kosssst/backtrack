@@ -11,7 +11,8 @@
 		"format:check": "prettier . --check",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"test:ui": "vitest --ui"
+		"test:ui": "vitest --ui",
+		"test:coverage": "vitest run --coverage"
 	},
 	"dependencies": {
 		"@mantine/core": "^8.3.14",
@@ -36,6 +37,7 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "^5.1.4",
+		"@vitest/coverage-v8": "^4.0.18",
 		"eslint": "^9",
 		"eslint-config-next": "16.1.6",
 		"eslint-config-prettier": "^10.1.8",
