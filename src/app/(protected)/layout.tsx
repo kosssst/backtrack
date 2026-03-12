@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth/auth';
 import { buildAuthRedirect } from '@/lib/auth/redirect';
 import { MainHeader } from '@/components/headers/MainHeader';
+import { MainFooter } from '@/components/footers/MainFooter';
+import classes from '@/styles/ProtectedLayout.module.css';
 
 export default async function ProtectedLayout({
 	children,
@@ -21,9 +23,10 @@ export default async function ProtectedLayout({
 	}
 
 	return (
-		<>
+		<div className={classes.layout}>
 			<MainHeader user={session.user} />
-			{children}
-		</>
+			<main className={classes.main}>{children}</main>
+			<MainFooter />
+		</div>
 	);
 }
