@@ -1,6 +1,6 @@
 import 'server-only';
 import mongoose from 'mongoose';
-import { env } from '@/lib/env';
+import { getEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { MongooseCache } from '@/types/mongoose.types';
 
@@ -17,6 +17,7 @@ global.mongooseCache = cache;
 mongoose.set('strictQuery', true);
 
 export async function connectMongoose() {
+	const env = getEnv();
 	if (cache.conn) return cache.conn;
 
 	if (!cache.promise) {

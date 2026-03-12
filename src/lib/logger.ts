@@ -1,11 +1,25 @@
 import 'server-only';
 import pino from 'pino';
-import { env } from '@/lib/env';
 
-const isProd = env.NODE_ENV === 'production';
+const nodeEnv = process.env.NODE_ENV ?? 'production';
+const isProd = nodeEnv === 'production';
+
+const logLevel = (() => {
+	const value = process.env.LOG_LEVEL;
+
+	switch (value) {
+		case 'debug':
+		case 'info':
+		case 'warn':
+		case 'error':
+			return value;
+		default:
+			return isProd ? 'info' : 'debug';
+	}
+})();
 
 export const logger = pino({
-	level: env.LOG_LEVEL ?? (isProd ? 'info' : 'debug'),
+	level: logLevel,
 
 	redact: {
 		paths: [
@@ -26,11 +40,11 @@ export const logger = pino({
 	transport: isProd
 		? undefined
 		: {
-				target: 'pino-pretty',
-				options: {
-					colorize: true,
-					translateTime: 'SYS:standard',
-					ignore: 'pid,hostname',
-				},
+			target: 'pino-pretty',
+			options: {
+				colorize: true,
+				translateTime: 'SYS:standard',
+				ignore: 'pid,hostname',
 			},
+		},
 });

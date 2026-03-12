@@ -1,17 +1,53 @@
 import { betterAuth } from 'better-auth';
-import { MongoClient } from 'mongodb';
-import { env } from '@/lib/env';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
-import { nextCookies } from 'better-auth/next-js';
+import { nextCookies, toNextJsHandler } from 'better-auth/next-js';
+import { MongoClient } from 'mongodb';
+import { getEnv } from '@/lib/env';
 
-const client = await new MongoClient(env.MONGODB_URL).connect();
-const db = client.db('backtrack');
+const DB_NAME = 'backtrack';
 
-export const auth = betterAuth({
-	baseURL: env.APP_ORIGIN,
-	database: mongodbAdapter(db),
-	emailAndPassword: {
-		enabled: true,
-	},
-	plugins: [nextCookies()],
-});
+type AuthInstance = ReturnType<typeof betterAuth>;
+
+let mongoClientPromise: Promise<MongoClient> | null = null;
+let authPromise: Promise<AuthInstance> | null = null;
+let handlersPromise: Promise<ReturnType<typeof toNextJsHandler>> | null = null;
+
+async function getMongoClient(): Promise<MongoClient> {
+	if (!mongoClientPromise) {
+		const { MONGODB_URL } = getEnv();
+		mongoClientPromise = new MongoClient(MONGODB_URL).connect();
+	}
+
+	return mongoClientPromise;
+}
+
+async function createAuth(): Promise<AuthInstance> {
+	const client = await getMongoClient();
+	const db = client.db(DB_NAME);
+	const { APP_ORIGIN } = getEnv();
+
+	return betterAuth({
+		baseURL: APP_ORIGIN,
+		database: mongodbAdapter(db),
+		emailAndPassword: {
+			enabled: true,
+		},
+		plugins: [nextCookies()],
+	});
+}
+
+export async function getAuth(): Promise<AuthInstance> {
+	if (!authPromise) {
+		authPromise = createAuth();
+	}
+
+	return authPromise;
+}
+
+export async function getAuthHandlers() {
+	if (!handlersPromise) {
+		handlersPromise = getAuth().then((auth) => toNextJsHandler(auth));
+	}
+
+	return handlersPromise;
+}

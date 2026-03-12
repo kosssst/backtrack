@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
 	env: {
 		NEXT_PUBLIC_APP_VERSION: pkg.version,
 	},
+	output: 'standalone',
 };
 
 export default nextConfig;
