@@ -90,8 +90,7 @@ export function LoginForm({ redirectTo }: AuthFormProps) {
 						<div className={classes.actions}>
 							<Checkbox
 								label="Remember me"
-								key={form.key('rememberMe')}
-								{...form.getInputProps('rememberMe')}
+								{...form.getInputProps('rememberMe', { type: 'checkbox' })}
 							/>
 							<Button
 								type="submit"
