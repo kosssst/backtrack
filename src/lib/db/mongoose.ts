@@ -1,8 +1,8 @@
 import 'server-only';
 import mongoose from 'mongoose';
-import { getEnv } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { MongooseCache } from '@/types/mongoose.types';
+import { getDbEnv } from '@/lib/env/runtime/db-env';
 
 declare global {
 	var mongooseCache: MongooseCache | undefined;
@@ -17,12 +17,12 @@ global.mongooseCache = cache;
 mongoose.set('strictQuery', true);
 
 export async function connectMongoose() {
-	const env = getEnv();
+	const { MONGODB_URL } = getDbEnv();
 	if (cache.conn) return cache.conn;
 
 	if (!cache.promise) {
 		cache.promise = mongoose
-			.connect(env.MONGODB_URL, { dbName: 'backtrack' })
+			.connect(MONGODB_URL, { dbName: 'backtrack' })
 			.then((m) => m);
 	}
 

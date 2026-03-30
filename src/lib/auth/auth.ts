@@ -2,7 +2,8 @@ import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { nextCookies, toNextJsHandler } from 'better-auth/next-js';
 import { MongoClient } from 'mongodb';
-import { getEnv } from '@/lib/env';
+import { getDbEnv } from '@/lib/env/runtime/db-env';
+import { getAuthEnv } from '@/lib/env/runtime/auth-env';
 
 const DB_NAME = 'backtrack';
 
@@ -14,7 +15,7 @@ let handlersPromise: Promise<ReturnType<typeof toNextJsHandler>> | null = null;
 
 async function getMongoClient(): Promise<MongoClient> {
 	if (!mongoClientPromise) {
-		const { MONGODB_URL } = getEnv();
+		const { MONGODB_URL } = getDbEnv();
 		mongoClientPromise = new MongoClient(MONGODB_URL).connect();
 	}
 
@@ -24,7 +25,7 @@ async function getMongoClient(): Promise<MongoClient> {
 async function createAuth(): Promise<AuthInstance> {
 	const client = await getMongoClient();
 	const db = client.db(DB_NAME);
-	const { APP_ORIGIN } = getEnv();
+	const { APP_ORIGIN } = getAuthEnv();
 
 	return betterAuth({
 		baseURL: APP_ORIGIN,

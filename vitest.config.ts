@@ -9,7 +9,9 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@test': fileURLToPath(new URL('./tests/setup', import.meta.url)),
-			'server-only': fileURLToPath(new URL('./tests/setup/empty.ts', import.meta.url)),
+			'server-only': fileURLToPath(
+				new URL('./tests/setup/empty.ts', import.meta.url),
+			),
 		},
 	},
 	test: {
@@ -24,10 +26,7 @@ export default defineConfig({
 
 		coverage: {
 			reporter: ['text', 'html'],
-			exclude: [
-				'src/styles/**',
-				'**/*.module.css',
-			],
+			exclude: ['src/styles/**', '**/*.module.css'],
 		},
 	},
 });

@@ -1,18 +1,16 @@
 import crypto from 'crypto';
-import { getEnv } from '@/lib/env';
 import { AES256GCMEncryptedData } from '@/types/encryption.types';
-
-
+import { getCryptoEnv } from '@/lib/env/runtime/crypto-env';
 
 function makeAAD(userId: string) {
 	return Buffer.from(`user:${userId}`, 'utf8');
 }
 
 export async function encrypt(plaintext: string, userId: string) {
-	const env = getEnv();
+	const { ENCRYPTION_KEY } = getCryptoEnv();
 	const iv = crypto.randomBytes(12);
 
-	const cipher = crypto.createCipheriv('aes-256-gcm', env.ENCRYPTION_KEY, iv);
+	const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
 	cipher.setAAD(makeAAD(userId));
 
 	const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
@@ -30,13 +28,13 @@ export async function decrypt(
 	encryptedData: AES256GCMEncryptedData,
 	userId: string,
 ) {
-	const env = getEnv();
+	const { ENCRYPTION_KEY } = getCryptoEnv();
 	if (encryptedData.alg !== 'aes-256-gcm')
 		throw new Error(`Unsupported alg: ${encryptedData.alg}`);
 
 	const decipher = crypto.createDecipheriv(
 		'aes-256-gcm',
-		env.ENCRYPTION_KEY,
+		ENCRYPTION_KEY,
 		encryptedData.iv,
 	);
 	decipher.setAAD(makeAAD(userId));

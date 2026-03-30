@@ -40,11 +40,11 @@ export const logger = pino({
 	transport: isProd
 		? undefined
 		: {
-			target: 'pino-pretty',
-			options: {
-				colorize: true,
-				translateTime: 'SYS:standard',
-				ignore: 'pid,hostname',
+				target: 'pino-pretty',
+				options: {
+					colorize: true,
+					translateTime: 'SYS:standard',
+					ignore: 'pid,hostname',
+				},
 			},
-		},
 });

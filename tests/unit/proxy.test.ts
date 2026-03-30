@@ -5,7 +5,8 @@ const nextResponseMocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/server', async () => {
-	const actual = await vi.importActual<typeof import('next/server')>('next/server');
+	const actual =
+		await vi.importActual<typeof import('next/server')>('next/server');
 	return {
 		...actual,
 		NextResponse: {
@@ -34,7 +35,9 @@ describe('proxy', () => {
 			request: { headers: Headers };
 		};
 
-		expect(init.request.headers.get('x-return-to')).toBe('/profile?tab=security');
+		expect(init.request.headers.get('x-return-to')).toBe(
+			'/profile?tab=security',
+		);
 		expect(init.request.headers.get('x-test')).toBe('1');
 	});
 

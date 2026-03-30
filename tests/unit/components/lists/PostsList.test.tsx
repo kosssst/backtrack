@@ -138,7 +138,9 @@ describe('PostsList', () => {
 	});
 
 	it('shows a notification when loading fails', async () => {
-		const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const consoleErrorSpy = vi
+			.spyOn(console, 'error')
+			.mockImplementation(() => {});
 		vi.mocked(getPosts).mockRejectedValue(new Error('fail'));
 
 		renderWithMantine(<PostsList dateRange={emptyDateRange} />);

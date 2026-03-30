@@ -3,12 +3,12 @@ import { MantineProvider } from '@mantine/core';
 import { render, RenderOptions } from '@testing-library/react';
 
 function Wrapper({ children }: PropsWithChildren) {
-  return <MantineProvider>{children}</MantineProvider>;
+	return <MantineProvider>{children}</MantineProvider>;
 }
 
 export function renderWithMantine(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
+	ui: ReactElement,
+	options?: Omit<RenderOptions, 'wrapper'>,
 ) {
-  return render(ui, { wrapper: Wrapper, ...options });
+	return render(ui, { wrapper: Wrapper, ...options });
 }

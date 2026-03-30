@@ -21,7 +21,9 @@ describe('Post', () => {
 			/>,
 		);
 
-		expect(screen.getByRole('heading', { name: 'First post' })).toBeInTheDocument();
+		expect(
+			screen.getByRole('heading', { name: 'First post' }),
+		).toBeInTheDocument();
 		expect(screen.getByText(/Hello\s*world/)).toBeInTheDocument();
 		expect(screen.getByText('21:23 23.02.2026')).toBeInTheDocument();
 	});
