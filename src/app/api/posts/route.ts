@@ -8,8 +8,13 @@ import {
 	toISODateWithStartOfDay,
 } from '@/lib/utils/format-date';
 import { requireApiSession } from '@/lib/auth/require-api-session';
+import {readJsonWithLimit} from "@/lib/utils/json";
+import {logger} from "@/lib/logger";
+import {CreatePostRequestPayload} from "@/types/posts.types";
 
 export const runtime = 'nodejs';
+
+const MAX_POST_BYTES = 32 * 1024; // 32 KB
 
 function toIntParam(value: string | null, fallback: number) {
 	if (value == null || value.trim() === '') return fallback;
@@ -24,7 +29,15 @@ export async function POST(req: Request) {
 		return errorResponse;
 	}
 
-	const data = await req.json().catch(() => null);
+	let data: CreatePostRequestPayload;
+
+	try {
+		data = await readJsonWithLimit<CreatePostRequestPayload>(req, MAX_POST_BYTES);
+	} catch (error) {
+		logger.error(error);
+		return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
+	}
+
 	const title = (data?.title ?? '').toString().trim();
 	const body = (data?.body ?? '').toString().trim();
 

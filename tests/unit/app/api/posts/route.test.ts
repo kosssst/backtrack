@@ -8,6 +8,8 @@ const routeMocks = vi.hoisted(() => ({
 	countDocuments: vi.fn(),
 	create: vi.fn(),
 	find: vi.fn(),
+	readJsonWithLimit: vi.fn(),
+	loggerError: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/require-api-session', () => ({
@@ -31,6 +33,16 @@ vi.mock('@/models/posts.model', () => ({
 	},
 }));
 
+vi.mock('@/lib/utils/json', () => ({
+	readJsonWithLimit: routeMocks.readJsonWithLimit,
+}));
+
+vi.mock('@/lib/logger', () => ({
+	logger: {
+		error: routeMocks.loggerError,
+	},
+}));
+
 import { GET, POST, runtime } from '@/app/api/posts/route';
 
 function jsonRequest(url: string, body: unknown) {
@@ -47,6 +59,7 @@ function makeQueryResult(docs: unknown[]) {
 		skip: vi.fn(() => query),
 		limit: vi.fn(async () => docs),
 	};
+
 	return query;
 }
 
@@ -59,6 +72,8 @@ describe('posts route', () => {
 		routeMocks.countDocuments.mockReset();
 		routeMocks.create.mockReset();
 		routeMocks.find.mockReset();
+		routeMocks.readJsonWithLimit.mockReset();
+		routeMocks.loggerError.mockReset();
 	});
 
 	it('uses the node runtime', () => {
@@ -79,6 +94,32 @@ describe('posts route', () => {
 		);
 
 		expect(response.status).toBe(401);
+		expect(routeMocks.readJsonWithLimit).not.toHaveBeenCalled();
+	});
+
+	it('returns 400 and logs when readJsonWithLimit throws', async () => {
+		routeMocks.requireApiSession.mockResolvedValue({
+			session: { user: { id: 'user-1' } },
+			errorResponse: null,
+		});
+
+		const readerError = new Error('Request body too large');
+		routeMocks.readJsonWithLimit.mockRejectedValue(readerError);
+
+		const request = jsonRequest('http://localhost/api/posts', {
+			title: 'My title',
+			body: 'My body',
+		});
+
+		const response = await POST(request);
+
+		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 32 * 1024);
+		expect(routeMocks.loggerError).toHaveBeenCalledWith(readerError);
+		expect(routeMocks.encrypt).not.toHaveBeenCalled();
+		expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
+		expect(routeMocks.create).not.toHaveBeenCalled();
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({ message: 'Invalid JSON' });
 	});
 
 	it('rejects invalid POST payloads', async () => {
@@ -86,6 +127,10 @@ describe('posts route', () => {
 			session: { user: { id: 'user-1' } },
 			errorResponse: null,
 		});
+
+		routeMocks.readJsonWithLimit
+			.mockResolvedValueOnce({ title: '', body: 'body' })
+			.mockResolvedValueOnce({ title: 'title', body: '' });
 
 		const badTitle = await POST(
 			jsonRequest('http://localhost/api/posts', { title: '', body: 'body' }),
@@ -96,8 +141,12 @@ describe('posts route', () => {
 
 		expect(badTitle.status).toBe(400);
 		expect(await badTitle.json()).toEqual({ message: 'Invalid title' });
+
 		expect(badBody.status).toBe(400);
 		expect(await badBody.json()).toEqual({ message: 'Invalid content' });
+
+		expect(routeMocks.encrypt).not.toHaveBeenCalled();
+		expect(routeMocks.create).not.toHaveBeenCalled();
 	});
 
 	it('creates an encrypted post on valid POST', async () => {
@@ -105,6 +154,12 @@ describe('posts route', () => {
 			session: { user: { id: 'user-1' } },
 			errorResponse: null,
 		});
+
+		routeMocks.readJsonWithLimit.mockResolvedValue({
+			title: 'My title',
+			body: 'My body',
+		});
+
 		routeMocks.encrypt
 			.mockResolvedValueOnce({
 				alg: 'aes-256-gcm',
@@ -118,15 +173,17 @@ describe('posts route', () => {
 				ct: Buffer.from('ct2'),
 				tag: Buffer.from('tag2'),
 			});
+
 		routeMocks.create.mockResolvedValue({ _id: 'post-1' });
 
-		const response = await POST(
-			jsonRequest('http://localhost/api/posts', {
-				title: 'My title',
-				body: 'My body',
-			}),
-		);
+		const request = jsonRequest('http://localhost/api/posts', {
+			title: 'My title',
+			body: 'My body',
+		});
 
+		const response = await POST(request);
+
+		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 32 * 1024);
 		expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 		expect(routeMocks.encrypt).toHaveBeenNthCalledWith(1, 'My title', 'user-1');
 		expect(routeMocks.encrypt).toHaveBeenNthCalledWith(2, 'My body', 'user-1');
@@ -147,6 +204,7 @@ describe('posts route', () => {
 			},
 			authorId: 'user-1',
 		});
+
 		expect(response.status).toBe(201);
 		expect(await response.json()).toEqual({ _id: 'post-1' });
 	});
@@ -170,6 +228,7 @@ describe('posts route', () => {
 			session: { user: { id: 'user-1' } },
 			errorResponse: null,
 		});
+
 		routeMocks.connectMongoose.mockResolvedValue(undefined);
 		routeMocks.countDocuments.mockResolvedValue(1);
 
@@ -186,6 +245,7 @@ describe('posts route', () => {
 			session: { user: { id: 'user-1' } },
 			errorResponse: null,
 		});
+
 		routeMocks.connectMongoose.mockResolvedValue(undefined);
 		routeMocks.countDocuments.mockResolvedValue(1);
 		routeMocks.find.mockReturnValue(
@@ -212,6 +272,7 @@ describe('posts route', () => {
 				},
 			]),
 		);
+
 		routeMocks.decrypt
 			.mockResolvedValueOnce('Decrypted title')
 			.mockResolvedValueOnce('Decrypted body');
@@ -221,6 +282,7 @@ describe('posts route', () => {
 				'http://localhost/api/posts?page=1&limit=20&from=2026-02-23&to=2026-02-24',
 			),
 		);
+
 		const json = await response.json();
 
 		expect(routeMocks.countDocuments).toHaveBeenCalledWith({
@@ -230,6 +292,7 @@ describe('posts route', () => {
 				$lte: '2026-02-24T23:59:59.999Z',
 			},
 		});
+
 		expect(routeMocks.decrypt).toHaveBeenNthCalledWith(
 			1,
 			expect.objectContaining({ alg: 'aes-256-gcm' }),
@@ -240,6 +303,7 @@ describe('posts route', () => {
 			expect.objectContaining({ alg: 'aes-256-gcm' }),
 			'user-1',
 		);
+
 		expect(json).toEqual({
 			posts: [
 				{

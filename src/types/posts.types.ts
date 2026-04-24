@@ -14,3 +14,8 @@ export interface PostsResponse {
 	total: number;
 	limit: number;
 }
+
+export interface CreatePostRequestPayload {
+	title: string;
+	body: string;
+}
