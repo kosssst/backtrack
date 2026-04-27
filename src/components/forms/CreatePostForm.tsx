@@ -48,7 +48,7 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 
 	const handleCancel = async () => {
 		onCancel();
-	}
+	};
 
 	return (
 		<Paper withBorder shadow="md" radius="lg" p="md" mb="md">
@@ -90,10 +90,7 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 						>
 							Cancel
 						</Button>
-						<Button
-							type="submit"
-							radius="md"
-						>
+						<Button type="submit" radius="md">
 							Create
 						</Button>
 					</div>

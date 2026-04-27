@@ -20,7 +20,13 @@ export default function Home() {
 		<>
 			<Container size="md" px="md">
 				<Group justify="space-between" align="center" mb="md">
-					<Button onClick={() => {setIsCreatePostFormVisible(true)}}>Create post</Button>
+					<Button
+						onClick={() => {
+							setIsCreatePostFormVisible(true);
+						}}
+					>
+						Create post
+					</Button>
 					<DatePickerInput
 						style={{ flex: 1, maxWidth: 220 }}
 						allowSingleDateInRange
@@ -34,7 +40,12 @@ export default function Home() {
 						maxDate={new Date()}
 					/>
 				</Group>
-				{ isCreatePostFormVisible && <CreatePostForm onSuccess={handleCreated} onCancel={() => setIsCreatePostFormVisible(false)} />}
+				{isCreatePostFormVisible && (
+					<CreatePostForm
+						onSuccess={handleCreated}
+						onCancel={() => setIsCreatePostFormVisible(false)}
+					/>
+				)}
 				<PostsList reloadKey={reloadKey} dateRange={dateRange} />
 			</Container>
 		</>
