@@ -46,7 +46,7 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 		});
 	};
 
-	const handleCancel = async () => {
+	const handleCancel = () => {
 		onCancel();
 	};
 
