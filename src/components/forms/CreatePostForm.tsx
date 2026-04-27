@@ -5,7 +5,7 @@ import { createPost } from '@/lib/api/posts.client';
 import { notifications } from '@mantine/notifications';
 import { CreatePostFormProps } from '@/types/props.types';
 
-export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
+export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 	const form = useForm({
 		mode: 'controlled',
 		initialValues: {
@@ -38,7 +38,7 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
 			return;
 		}
 
-		onSuccess?.();
+		onSuccess();
 		notifications.show({
 			title: 'Success',
 			message: 'Post created successfully',
@@ -46,50 +46,56 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
 		});
 	};
 
+	const handleCancel = () => {
+		onCancel();
+	};
+
 	return (
-		<div>
-			<Paper>
-				<form
-					onSubmit={form.onSubmit(async () => {
-						if (!form.isValid()) {
-							form.validate();
-							return;
-						}
-						await handleSubmit();
-					})}
-				>
-					<Stack gap="md">
-						<TextInput
-							label="Title"
-							placeholder="Title of your post"
-							required
+		<Paper withBorder shadow="md" radius="lg" p="md" mb="md">
+			<form
+				onSubmit={form.onSubmit(async () => {
+					if (!form.isValid()) {
+						form.validate();
+						return;
+					}
+					await handleSubmit();
+				})}
+			>
+				<Stack gap="md">
+					<TextInput
+						label="Title"
+						placeholder="Title of your post"
+						required
+						radius="md"
+						key={form.key('title')}
+						{...form.getInputProps('title')}
+					/>
+					<Textarea
+						label="Body"
+						placeholder="Text of your post"
+						required
+						radius="md"
+						key={form.key('body')}
+						{...form.getInputProps('body')}
+						autosize
+						minRows={4}
+						maxRows={20}
+					/>
+					<div className={classes.actions}>
+						<Button
 							radius="md"
-							key={form.key('title')}
-							{...form.getInputProps('title')}
-						/>
-						<Textarea
-							label="Body"
-							placeholder="Text of your post"
-							required
-							radius="md"
-							key={form.key('body')}
-							{...form.getInputProps('body')}
-							autosize
-							minRows={4}
-							maxRows={20}
-						/>
-						<div className={classes.actions}>
-							<Button
-								type="submit"
-								radius="md"
-								className={classes.fullWidthBtn}
-							>
-								Create
-							</Button>
-						</div>
-					</Stack>
-				</form>
-			</Paper>
-		</div>
+							onClick={handleCancel}
+							variant="outline"
+							color="red"
+						>
+							Cancel
+						</Button>
+						<Button type="submit" radius="md">
+							Create
+						</Button>
+					</div>
+				</Stack>
+			</form>
+		</Paper>
 	);
 }

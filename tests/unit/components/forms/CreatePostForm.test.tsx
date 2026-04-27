@@ -35,9 +35,10 @@ describe('CreatePostForm', () => {
 
 	it('submits title and body and runs onSuccess on a successful create', async () => {
 		const onSuccess = vi.fn();
+		const onCancel = vi.fn();
 		vi.mocked(createPost).mockResolvedValue({ _id: 'post-1' } as never);
 
-		renderWithMantine(<CreatePostForm onSuccess={onSuccess} />);
+		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
 
 		await userEvent.type(
 			screen.getByRole('textbox', { name: /title/i }),
@@ -65,9 +66,10 @@ describe('CreatePostForm', () => {
 
 	it('shows an error notification when createPost fails', async () => {
 		const onSuccess = vi.fn();
+		const onCancel = vi.fn();
 		vi.mocked(createPost).mockRejectedValue(new Error('fail'));
 
-		renderWithMantine(<CreatePostForm onSuccess={onSuccess} />);
+		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
 
 		await userEvent.type(
 			screen.getByRole('textbox', { name: /title/i }),
@@ -90,7 +92,9 @@ describe('CreatePostForm', () => {
 	});
 
 	it('does not submit empty required fields', async () => {
-		renderWithMantine(<CreatePostForm />);
+		const onSuccess = vi.fn();
+		const onCancel = vi.fn();
+		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
 
 		await userEvent.click(screen.getByRole('button', { name: /create/i }));
 

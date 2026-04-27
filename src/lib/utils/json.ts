@@ -1,5 +1,7 @@
-export async function readJsonWithLimit<T>( req: Request, maxBytes: number): Promise<T> {
-
+export async function readJsonWithLimit<T>(
+	req: Request,
+	maxBytes: number,
+): Promise<T> {
 	if (!Number.isInteger(maxBytes) || maxBytes <= 0) {
 		throw new Error('maxBytes must be a positive integer');
 	}

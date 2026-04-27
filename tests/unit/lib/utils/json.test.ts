@@ -13,10 +13,10 @@ function streamFromText(text: string) {
 }
 
 function makeRequest({
-											 contentType = 'application/json',
-											 contentLength,
-											 text,
-										 }: {
+	contentType = 'application/json',
+	contentLength,
+	text,
+}: {
 	contentType?: string;
 	contentLength?: string;
 	text?: string;
@@ -125,11 +125,7 @@ describe('readJsonWithLimit', () => {
 			contentType: 'application/json',
 		});
 
-		await expectReadJsonWithLimitToThrow(
-			request,
-			1024,
-			'Empty request body',
-		);
+		await expectReadJsonWithLimitToThrow(request, 1024, 'Empty request body');
 	});
 
 	it('throws when the streamed body exceeds the limit even without Content-Length', async () => {
@@ -139,11 +135,7 @@ describe('readJsonWithLimit', () => {
 			}),
 		});
 
-		await expectReadJsonWithLimitToThrow(
-			request,
-			32,
-			'Request body too large',
-		);
+		await expectReadJsonWithLimitToThrow(request, 32, 'Request body too large');
 	});
 
 	it('throws when JSON is invalid', async () => {
@@ -151,10 +143,6 @@ describe('readJsonWithLimit', () => {
 			text: '{"title":',
 		});
 
-		await expectReadJsonWithLimitToThrow(
-			request,
-			1024,
-			'Invalid JSON',
-		);
+		await expectReadJsonWithLimitToThrow(request, 1024, 'Invalid JSON');
 	});
 });
