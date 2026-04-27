@@ -89,7 +89,7 @@ export function PostsList({
 	}, [entry?.isIntersecting, page, hasMore, loadPage]);
 
 	return (
-		<Stack>
+		<Stack gap="md">
 			{posts.map((p) => (
 				<Post key={p._id} {...p} />
 			))}
