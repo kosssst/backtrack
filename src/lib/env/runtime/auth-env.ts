@@ -1,10 +1,12 @@
 import 'server-only';
-import {parseUrl, required} from '../parsers';
+import { parseUrl, required } from '../parsers';
 
-let cached: {
-	APP_ORIGIN: string,
-	BETTER_AUTH_SECRET: string,
-} | undefined;
+let cached:
+	| {
+			APP_ORIGIN: string;
+			BETTER_AUTH_SECRET: string;
+	  }
+	| undefined;
 
 export function getAuthEnv() {
 	if (cached) return cached;

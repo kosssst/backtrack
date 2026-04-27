@@ -8,9 +8,9 @@ import {
 	toISODateWithStartOfDay,
 } from '@/lib/utils/format-date';
 import { requireApiSession } from '@/lib/auth/require-api-session';
-import {readJsonWithLimit} from "@/lib/utils/json";
-import {logger} from "@/lib/logger";
-import {CreatePostRequestPayload} from "@/types/posts.types";
+import { readJsonWithLimit } from '@/lib/utils/json';
+import { logger } from '@/lib/logger';
+import { CreatePostRequestPayload } from '@/types/posts.types';
 
 export const runtime = 'nodejs';
 
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
 	let data: CreatePostRequestPayload;
 
 	try {
-		data = await readJsonWithLimit<CreatePostRequestPayload>(req, MAX_POST_BYTES);
+		data = await readJsonWithLimit<CreatePostRequestPayload>(
+			req,
+			MAX_POST_BYTES,
+		);
 	} catch (error) {
 		logger.error(error);
 		return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
