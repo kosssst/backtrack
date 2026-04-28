@@ -38,7 +38,9 @@ describe('CreatePostForm', () => {
 		const onCancel = vi.fn();
 		vi.mocked(createPost).mockResolvedValue({ _id: 'post-1' } as never);
 
-		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
+		renderWithMantine(
+			<CreatePostForm onSuccess={onSuccess} onCancel={onCancel} />,
+		);
 
 		await userEvent.type(
 			screen.getByRole('textbox', { name: /title/i }),
@@ -69,7 +71,9 @@ describe('CreatePostForm', () => {
 		const onCancel = vi.fn();
 		vi.mocked(createPost).mockRejectedValue(new Error('fail'));
 
-		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
+		renderWithMantine(
+			<CreatePostForm onSuccess={onSuccess} onCancel={onCancel} />,
+		);
 
 		await userEvent.type(
 			screen.getByRole('textbox', { name: /title/i }),
@@ -94,7 +98,9 @@ describe('CreatePostForm', () => {
 	it('does not submit empty required fields', async () => {
 		const onSuccess = vi.fn();
 		const onCancel = vi.fn();
-		renderWithMantine(<CreatePostForm onSuccess={onSuccess} onCancel={onCancel}/>);
+		renderWithMantine(
+			<CreatePostForm onSuccess={onSuccess} onCancel={onCancel} />,
+		);
 
 		await userEvent.click(screen.getByRole('button', { name: /create/i }));
 
