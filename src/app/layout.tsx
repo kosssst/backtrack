@@ -10,6 +10,7 @@ import {
 	mantineHtmlProps,
 } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 
 export const metadata: Metadata = {
 	title: 'Backtrack',
@@ -30,8 +31,10 @@ export default function RootLayout({
 					withGlobalClasses
 					defaultColorScheme={'dark'}
 				>
-					<Notifications position="bottom-right" />
-					<div className="appShell">{children}</div>
+					<ModalsProvider>
+						<Notifications position="bottom-right" />
+						<div className="appShell">{children}</div>
+					</ModalsProvider>
 				</MantineProvider>
 			</body>
 		</html>

@@ -14,6 +14,20 @@
 
 ---
 
+- [Overview](#overview)
+- [Security notes](#security-notes)
+- [Getting started](#getting-started)
+  - [Option 1: Run with Docker](#option-1-run-with-docker)
+  - [Option 2: Run locally](#option-2-run-locally)
+    - [Prerequisites](#prerequisites)
+    - [Run](#run)
+    - [Development run](#development-run)
+- [Limitations](#limitations)
+- [Roadmap ideas](#roadmap-ideas)
+- [Contributing](#contributing)
+
+---
+
 ## Overview
 
 **Backtrack** is an open-source web application for securely storing personal history: what you worked on, what happened, and when it happened.
@@ -27,106 +41,19 @@ It is built for people who want a private, structured place to capture activity 
 
 Backtrack is designed as a **personal memory layer** for work logs, troubleshooting notes, progress tracking, and day-to-day private records.
 
----
-
-## Why Backtrack?
-
-A lot of useful context disappears into scattered notes, chat logs, temporary files, and memory.
-
-Backtrack gives you one place to keep a durable history of:
-
-- what you did
-- when you did it
-- the details you will likely need again later
-
-Typical use cases include:
-
-- daily work logs
-- development notes
-- debugging history
-- incident follow-ups
-- learning journals
-- private operational notes
-- lightweight personal journaling
-
----
-
-## Current feature set
-
-### Authentication
-- Email/password sign up
-- Email/password sign in
-- Session-based protected routes
-- Redirects for unauthenticated users
-
-### Posts
-- Create a post with title and body
-- Store title and body encrypted at rest
-- Load posts in reverse chronological order
-- Paginated API responses
-- Infinite scrolling in the UI
-- Filter posts by date range
-
-### Profile
-- View profile page
-- Update display name
-- Change password
-
-### Developer experience
-- TypeScript-first codebase
-- App Router-based Next.js structure
-- Vitest + Testing Library test setup
-- Pull request test workflow
-- Production Dockerfile
-
----
-
 ## Security notes
 
-Backtrack is built to protect stored note content, but it is important to describe the current model accurately.
+Backtrack is built to protect stored note content.
 
-### What is protected
+What is protected:
+
 - Post titles and bodies are encrypted before being written to MongoDB
 - AES-256-GCM is used for field-level encryption
-- Each encrypted field stores its own metadata, IV, ciphertext, and authentication tag
 - Posts are associated with the authenticated user who created them
 
-### What this does **not** mean
 Backtrack is **not currently end-to-end encrypted** or zero-knowledge.
 
-The server holds the runtime encryption key and decrypts stored content in order to return it to the authenticated user. That means the project currently protects data **at rest in the database**, but does not claim that the server itself is unable to read user data.
-
-That distinction matters, and this repository intentionally describes it honestly.
-
----
-
-## Tech stack
-
-- **Framework:** Next.js 16
-- **Language:** TypeScript
-- **UI:** Mantine
-- **Authentication:** Better Auth
-- **Database:** MongoDB
-- **ODM:** Mongoose
-- **Logging:** Pino
-- **Testing:** Vitest
-- **Containerization:** Docker
-
----
-
-## Architecture at a glance
-
-Backtrack uses a standard web application architecture:
-
-1. The user signs in with email and password
-2. Protected routes validate the session
-3. New posts are encrypted on the server before storage
-4. Encrypted post fields are stored in MongoDB
-5. When posts are requested, the server validates the session, loads the user’s records, decrypts the fields, and returns plain text to the client
-
-This keeps the application practical to use while still protecting note content from being stored in plaintext inside the database.
-
----
+The server holds the runtime encryption key and decrypts stored content in order to return it to the authenticated user.
 
 ## Getting started
 
@@ -188,20 +115,20 @@ docker compose up -d
  - npm
  - MongoDB
 
-#### Clone the repository
+#### Run
+
+Clone repository:
 
 ```bash
 git clone https://github.com/kosssst/backtrack.git
 cd backtrack
 ```
 
-#### Install dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
-
-#### Create your environment file
 
 Create .env.local in the project root:
 
@@ -212,7 +139,7 @@ ENCRYPTION_KEY=REPLACE_WITH_A_BASE64_32_BYTE_KEY
 BETTER_AUTH_SECRET=SECRET_KEY
 ```
 
-#### Generate a valid encryption key
+Generate a valid encryption key
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
@@ -220,7 +147,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 Paste the output into `ENCRYPTION_KEY`.
 
-#### Build and start
+Build and start
 
 ```bash
 npm run build
@@ -233,24 +160,13 @@ Then open:
 http://localhost:3000
 ```
 
-#### Development
+#### Development run
 
 If you want hot reload during development:
 
 ```bash
 npm run dev
 ```
-
----
-
-## What the project does well today
-
- - Keeps note content encrypted in storage
- - Gives each user a private authenticated workspace
- - Supports fast iteration as a modern Next.js app
- - Includes a clean starting point for expanding into a richer secure knowledge log
-
----
 
 ## Limitations
 
@@ -261,21 +177,16 @@ This project is still early-stage and there are important limitations to be awar
  - There is no export/import workflow yet
  - There are no tags, labels, or structured search dimensions yet
 
----
-
 ## Roadmap ideas
 
 Backtrack already has a strong foundation for secure personal logging. Natural next steps could include:
 
  - private search improvements
  - tags or categories
- - edit/delete flows
  - backup/export options
  - richer timeline exploration
  - audit-friendly event history
  - stronger operational hardening for production deployments
-
----
 
 ## Contributing
 
@@ -298,5 +209,3 @@ npm run format
 ```
 
 For larger changes, opening an issue first is a good idea so the direction can be discussed before implementation.
-
-

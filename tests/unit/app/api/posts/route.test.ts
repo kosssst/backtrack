@@ -113,7 +113,10 @@ describe('posts route', () => {
 
 		const response = await POST(request);
 
-		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 32 * 1024);
+		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(
+			request,
+			32 * 1024,
+		);
 		expect(routeMocks.loggerError).toHaveBeenCalledWith(readerError);
 		expect(routeMocks.encrypt).not.toHaveBeenCalled();
 		expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
@@ -183,7 +186,10 @@ describe('posts route', () => {
 
 		const response = await POST(request);
 
-		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 32 * 1024);
+		expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(
+			request,
+			32 * 1024,
+		);
 		expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 		expect(routeMocks.encrypt).toHaveBeenNthCalledWith(1, 'My title', 'user-1');
 		expect(routeMocks.encrypt).toHaveBeenNthCalledWith(2, 'My body', 'user-1');

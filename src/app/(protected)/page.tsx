@@ -1,40 +1,46 @@
 'use client';
 
-import { Button, Container, Group, Modal } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { CreatePostForm } from '@/components/forms/CreatePostForm';
+import { Button, Container, Group } from '@mantine/core';
+import { PostForm } from '@/components/forms/PostForm';
 import { PostsList } from '@/components/lists/PostsList';
 import { useState } from 'react';
 import { DatePickerInput, DatesRangeValue } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
 
 export default function Home() {
-	const [opened, { open, close }] = useDisclosure(false);
 	const [reloadKey, setReloadKey] = useState(0);
 	const [dateRange, setDateRange] = useState<DatesRangeValue>([null, null]);
+	const [isCreatePostFormVisible, setIsCreatePostFormVisible] = useState(false);
 
 	const handleCreated = () => {
-		close();
+		setIsCreatePostFormVisible(false);
 		setReloadKey((k) => k + 1);
+		notifications.show({
+			color: 'green',
+			title: 'Success',
+			message: 'Post created successfully',
+		});
+	};
+
+	const handleFailed = () => {
+		notifications.show({
+			color: 'red',
+			title: 'Failure',
+			message: 'Failed to create post',
+		});
 	};
 
 	return (
 		<>
-			<Modal.Root opened={opened} onClose={close}>
-				<Modal.Overlay />
-				<Modal.Content>
-					<Modal.Header>
-						<Modal.Title fw={600}>Create new post</Modal.Title>
-						<Modal.CloseButton />
-					</Modal.Header>
-					<Modal.Body>
-						<CreatePostForm onSuccess={handleCreated} />
-					</Modal.Body>
-				</Modal.Content>
-			</Modal.Root>
-
 			<Container size="md" px="md">
 				<Group justify="space-between" align="center" mb="md">
-					<Button onClick={open}>Create post</Button>
+					<Button
+						onClick={() => {
+							setIsCreatePostFormVisible(true);
+						}}
+					>
+						Create post
+					</Button>
 					<DatePickerInput
 						style={{ flex: 1, maxWidth: 220 }}
 						allowSingleDateInRange
@@ -48,6 +54,13 @@ export default function Home() {
 						maxDate={new Date()}
 					/>
 				</Group>
+				{isCreatePostFormVisible && (
+					<PostForm
+						onSuccess={handleCreated}
+						onCancel={() => setIsCreatePostFormVisible(false)}
+						onFailure={handleFailed}
+					/>
+				)}
 				<PostsList reloadKey={reloadKey} dateRange={dateRange} />
 			</Container>
 		</>

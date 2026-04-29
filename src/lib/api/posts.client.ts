@@ -35,3 +35,30 @@ export async function getPosts(params?: {
 	if (!res.ok) throw new Error(await res.text());
 	return (await res.json()) as PostsResponse;
 }
+
+export async function updatePost(input: {
+	_id: string;
+	title: string;
+	body: string;
+}) {
+	const { _id, ...requestBody } = input;
+	const res = await fetch(`/api/posts/${_id}`, {
+		method: 'PUT',
+		credentials: 'include',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(requestBody),
+	});
+
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}
+
+export async function deletePost(input: { _id: string }) {
+	const res = await fetch(`/api/posts/${input._id}`, {
+		method: 'DELETE',
+		credentials: 'include',
+	});
+
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}

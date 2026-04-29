@@ -8,9 +8,9 @@ import {
 	toISODateWithStartOfDay,
 } from '@/lib/utils/format-date';
 import { requireApiSession } from '@/lib/auth/require-api-session';
-import {readJsonWithLimit} from "@/lib/utils/json";
-import {logger} from "@/lib/logger";
-import {CreatePostRequestPayload} from "@/types/posts.types";
+import { readJsonWithLimit } from '@/lib/utils/json';
+import { logger } from '@/lib/logger';
+import { CreatePostRequestPayload } from '@/types/posts.types';
 
 export const runtime = 'nodejs';
 
@@ -32,7 +32,10 @@ export async function POST(req: Request) {
 	let data: CreatePostRequestPayload;
 
 	try {
-		data = await readJsonWithLimit<CreatePostRequestPayload>(req, MAX_POST_BYTES);
+		data = await readJsonWithLimit<CreatePostRequestPayload>(
+			req,
+			MAX_POST_BYTES,
+		);
 	} catch (error) {
 		logger.error(error);
 		return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
@@ -48,16 +51,26 @@ export async function POST(req: Request) {
 		return NextResponse.json({ message: 'Invalid content' }, { status: 400 });
 	}
 
-	const titleEnc = await encrypt(title, session.user.id);
-	const bodyEnc = await encrypt(body, session.user.id);
+	let post;
 
-	await connectMongoose();
+	try {
+		const titleEnc = await encrypt(title, session.user.id);
+		const bodyEnc = await encrypt(body, session.user.id);
 
-	const post = await Posts.create({
-		titleEnc: { v: 1, ...titleEnc },
-		bodyEnc: { v: 1, ...bodyEnc },
-		authorId: session.user.id,
-	});
+		await connectMongoose();
+
+		post = await Posts.create({
+			titleEnc: { v: 1, ...titleEnc },
+			bodyEnc: { v: 1, ...bodyEnc },
+			authorId: session.user.id,
+		});
+	} catch (error) {
+		logger.error(error);
+		return NextResponse.json(
+			{ message: 'Unable to create a post' },
+			{ status: 500 },
+		);
+	}
 
 	return NextResponse.json({ _id: post._id }, { status: 201 });
 }
