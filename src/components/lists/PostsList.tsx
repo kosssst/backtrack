@@ -105,7 +105,12 @@ export function PostsList({
 	return (
 		<Stack gap="md">
 			{posts.map((p) => (
-				<Post key={p._id} {...p} onUpdated={handlePostUpdated} onDeleted={handlePostDeleted} />
+				<Post
+					key={p._id}
+					{...p}
+					onUpdated={handlePostUpdated}
+					onDeleted={handlePostDeleted}
+				/>
 			))}
 
 			{hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}

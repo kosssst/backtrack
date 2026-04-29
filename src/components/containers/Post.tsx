@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import { formatPostDate } from '@/lib/utils/format-date';
 import { useState } from 'react';
-import {IconEdit, IconTrash} from '@tabler/icons-react';
+import { IconEdit, IconTrash } from '@tabler/icons-react';
 import classes from '@/styles/Post.module.css';
 import { PostForm } from '@/components/forms/PostForm';
 import { notifications } from '@mantine/notifications';
@@ -51,7 +51,8 @@ export function Post(props: PostProps) {
 			title: 'Delete post',
 			children: (
 				<Text size="sm">
-					Are you sure you want to delete this post? This action cannot be undone.
+					Are you sure you want to delete this post? This action cannot be
+					undone.
 				</Text>
 			),
 			labels: {

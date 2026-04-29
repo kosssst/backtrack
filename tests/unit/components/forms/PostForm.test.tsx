@@ -39,8 +39,14 @@ describe('PostForm', () => {
 			/>,
 		);
 
-		await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'My title');
-		await userEvent.type(screen.getByRole('textbox', { name: /body/i }), 'My body');
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /title/i }),
+			'My title',
+		);
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /body/i }),
+			'My body',
+		);
 		await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
 		await waitFor(() => {
@@ -75,13 +81,23 @@ describe('PostForm', () => {
 			/>,
 		);
 
-		expect(screen.getByRole('textbox', { name: /title/i })).toHaveValue('Old title');
-		expect(screen.getByRole('textbox', { name: /body/i })).toHaveValue('Old body');
+		expect(screen.getByRole('textbox', { name: /title/i })).toHaveValue(
+			'Old title',
+		);
+		expect(screen.getByRole('textbox', { name: /body/i })).toHaveValue(
+			'Old body',
+		);
 
 		await userEvent.clear(screen.getByRole('textbox', { name: /title/i }));
-		await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'New title');
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /title/i }),
+			'New title',
+		);
 		await userEvent.clear(screen.getByRole('textbox', { name: /body/i }));
-		await userEvent.type(screen.getByRole('textbox', { name: /body/i }), 'New body');
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /body/i }),
+			'New body',
+		);
 		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
 		await waitFor(() => {
@@ -113,8 +129,14 @@ describe('PostForm', () => {
 			/>,
 		);
 
-		await userEvent.type(screen.getByRole('textbox', { name: /title/i }), 'My title');
-		await userEvent.type(screen.getByRole('textbox', { name: /body/i }), 'My body');
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /title/i }),
+			'My title',
+		);
+		await userEvent.type(
+			screen.getByRole('textbox', { name: /body/i }),
+			'My body',
+		);
 		await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
 		await waitFor(() => {

@@ -53,9 +53,7 @@ export async function updatePost(input: {
 	return res.json();
 }
 
-export async function deletePost(input: {
-	_id: string;
-}) {
+export async function deletePost(input: { _id: string }) {
 	const res = await fetch(`/api/posts/${input._id}`, {
 		method: 'DELETE',
 		credentials: 'include',
