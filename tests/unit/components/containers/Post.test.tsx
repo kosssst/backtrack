@@ -167,7 +167,7 @@ describe('Post', () => {
 		expect(postMocks.notify).toHaveBeenCalledWith({
 			color: 'green',
 			title: 'Success',
-			message: 'Post deleted Successfully',
+			message: 'Post deleted successfully',
 		});
 	});
 
