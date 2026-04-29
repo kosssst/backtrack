@@ -9,6 +9,7 @@ export interface PostInterface {
 
 export type PostProps = PostInterface & {
 	onUpdated: (post: PostInterface) => void;
+	onDeleted: (postId: string) => void;
 };
 
 export interface PostsResponse {

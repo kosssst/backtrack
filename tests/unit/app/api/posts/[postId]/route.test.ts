@@ -274,7 +274,7 @@ describe('posts/[postId] route', () => {
 			);
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.updateOne).toHaveBeenCalledWith(
-				{ _id: 'post-1' },
+				{ _id: 'post-1', authorId: 'user-1' },
 				{
 					titleEnc: {
 						v: 1,
@@ -381,7 +381,10 @@ describe('posts/[postId] route', () => {
 			);
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
-			expect(routeMocks.deleteOne).toHaveBeenCalledWith({ _id: 'post-1' });
+			expect(routeMocks.deleteOne).toHaveBeenCalledWith({
+				_id: 'post-1',
+				authorId: 'user-1',
+			});
 			expect(response.status).toBe(200);
 			expect(await response.json()).toEqual({ _id: 'post-1' });
 		});
@@ -403,7 +406,10 @@ describe('posts/[postId] route', () => {
 			);
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
-			expect(routeMocks.deleteOne).toHaveBeenCalledWith({ _id: 'post-1' });
+			expect(routeMocks.deleteOne).toHaveBeenCalledWith({
+				_id: 'post-1',
+				authorId: 'user-1',
+			});
 			expect(routeMocks.loggerError).toHaveBeenCalledWith(deleteError);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({

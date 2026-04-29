@@ -1,3 +1,7 @@
 .editButton {
 	color: var(--mantine-color-text);
 }
+
+.deleteButton {
+	color: var(--mantine-color-red-5)
+}

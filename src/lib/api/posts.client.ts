@@ -52,3 +52,15 @@ export async function updatePost(input: {
 	if (!res.ok) throw new Error(await res.text());
 	return res.json();
 }
+
+export async function deletePost(input: {
+	_id: string;
+}) {
+	const res = await fetch(`/api/posts/${input._id}`, {
+		method: 'DELETE',
+		credentials: 'include',
+	});
+
+	if (!res.ok) throw new Error(await res.text());
+	return res.json();
+}

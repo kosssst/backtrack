@@ -47,7 +47,7 @@ export async function PUT(
 	try {
 		await connectMongoose();
 		await Posts.updateOne(
-			{ _id: postId },
+			{ _id: postId, authorId: session.user.id },
 			{ titleEnc: { v: 1, ...titleEnc }, bodyEnc: { v: 1, ...bodyEnc } },
 		);
 	} catch (error) {
@@ -74,7 +74,7 @@ export async function DELETE(
 
 	try {
 		await connectMongoose();
-		await Posts.deleteOne({ _id: postId });
+		await Posts.deleteOne({ _id: postId, authorId: session.user.id });
 	} catch (error) {
 		logger.error(error);
 		return NextResponse.json(

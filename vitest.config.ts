@@ -1,11 +1,9 @@
-// vitest.config.ts
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-	plugins: [tsconfigPaths(), react()],
+	plugins: [react()],
 	resolve: {
 		alias: {
 			'@test': fileURLToPath(new URL('./tests/setup', import.meta.url)),
@@ -13,6 +11,7 @@ export default defineConfig({
 				new URL('./tests/setup/empty.ts', import.meta.url),
 			),
 		},
+		tsconfigPaths: true,
 	},
 	test: {
 		include: ['./tests/**/*.{test,spec}.{ts,tsx}'],

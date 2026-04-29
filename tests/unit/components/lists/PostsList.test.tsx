@@ -1,6 +1,7 @@
 import { renderWithMantine } from '@test/render';
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 
 const postsListMocks = vi.hoisted(() => ({
 	notify: vi.fn(),
@@ -29,7 +30,22 @@ vi.mock('@/lib/api/posts.client', () => ({
 }));
 
 vi.mock('@/components/containers/Post', () => ({
-	Post: ({ title }: { title: string }) => <div>{title}</div>,
+	Post: ({
+		_id,
+		title,
+		onDeleted,
+	}: {
+		_id: string;
+		title: string;
+		onDeleted: (postId: string) => void;
+	}) => (
+		<div>
+			<span>{title}</span>
+			<button type="button" onClick={() => onDeleted(_id)}>
+				Delete {title}
+			</button>
+		</div>
+	),
 }));
 
 import { getPosts } from '@/lib/api/posts.client';
@@ -154,5 +170,48 @@ describe('PostsList', () => {
 		});
 
 		consoleErrorSpy.mockRestore();
+	});
+
+	it('removes a post from the list when a child reports deletion', async () => {
+		vi.mocked(getPosts).mockResolvedValue({
+			posts: [
+				{
+					_id: 'post-1',
+					title: 'First title',
+					body: 'First body',
+					authorId: 'user-1',
+					createdAt: '2026-02-23T21:23:01.104Z',
+					updatedAt: '2026-02-23T21:23:01.104Z',
+				},
+				{
+					_id: 'post-2',
+					title: 'Second title',
+					body: 'Second body',
+					authorId: 'user-1',
+					createdAt: '2026-02-24T21:23:01.104Z',
+					updatedAt: '2026-02-24T21:23:01.104Z',
+				},
+			],
+			page: 1,
+			maxPage: 1,
+			total: 2,
+			limit: 20,
+		});
+
+		renderWithMantine(<PostsList dateRange={emptyDateRange} />);
+
+		await waitFor(() => {
+			expect(screen.getByText('First title')).toBeInTheDocument();
+		});
+		expect(screen.getByText('Second title')).toBeInTheDocument();
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Delete First title' }),
+		);
+
+		await waitFor(() => {
+			expect(screen.queryByText('First title')).not.toBeInTheDocument();
+		});
+		expect(screen.getByText('Second title')).toBeInTheDocument();
 	});
 });
