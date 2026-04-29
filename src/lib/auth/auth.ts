@@ -7,7 +7,7 @@ import { getAuthEnv } from '@/lib/env/runtime/auth-env';
 
 const DB_NAME = 'backtrack';
 
-type AuthInstance = ReturnType<typeof betterAuth>;
+type AuthInstance = Awaited<ReturnType<typeof createAuth>>;
 
 let mongoClientPromise: Promise<MongoClient> | null = null;
 let authPromise: Promise<AuthInstance> | null = null;
@@ -22,7 +22,7 @@ async function getMongoClient(): Promise<MongoClient> {
 	return mongoClientPromise;
 }
 
-async function createAuth(): Promise<AuthInstance> {
+async function createAuth() {
 	const client = await getMongoClient();
 	const db = client.db(DB_NAME);
 	const { APP_ORIGIN } = getAuthEnv();
@@ -37,7 +37,7 @@ async function createAuth(): Promise<AuthInstance> {
 	});
 }
 
-export async function getAuth(): Promise<AuthInstance> {
+export async function getAuth() {
 	if (!authPromise) {
 		authPromise = createAuth();
 	}
