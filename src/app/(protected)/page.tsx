@@ -1,10 +1,11 @@
 'use client';
 
 import { Button, Container, Group } from '@mantine/core';
-import { CreatePostForm } from '@/components/forms/CreatePostForm';
+import { PostForm } from '@/components/forms/PostForm';
 import { PostsList } from '@/components/lists/PostsList';
 import { useState } from 'react';
 import { DatePickerInput, DatesRangeValue } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
 
 export default function Home() {
 	const [reloadKey, setReloadKey] = useState(0);
@@ -14,6 +15,19 @@ export default function Home() {
 	const handleCreated = () => {
 		setIsCreatePostFormVisible(false);
 		setReloadKey((k) => k + 1);
+		notifications.show({
+			color: 'green',
+			title: 'Success',
+			message: 'Post created successfully',
+		});
+	};
+
+	const handleFailed = () => {
+		notifications.show({
+			color: 'red',
+			title: 'Failure',
+			message: 'Failed to create post',
+		});
 	};
 
 	return (
@@ -41,9 +55,10 @@ export default function Home() {
 					/>
 				</Group>
 				{isCreatePostFormVisible && (
-					<CreatePostForm
+					<PostForm
 						onSuccess={handleCreated}
 						onCancel={() => setIsCreatePostFormVisible(false)}
+						onFailure={handleFailed}
 					/>
 				)}
 				<PostsList reloadKey={reloadKey} dateRange={dateRange} />

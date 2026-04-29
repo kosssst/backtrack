@@ -7,6 +7,10 @@ export interface PostInterface {
 	updatedAt: string;
 }
 
+export type PostProps = PostInterface & {
+	onUpdated: (post: PostInterface) => void;
+};
+
 export interface PostsResponse {
 	posts: PostInterface[];
 	page: number;

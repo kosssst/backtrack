@@ -1,4 +1,4 @@
-import { createPost, getPosts } from '@/lib/api/posts.client';
+import { createPost, getPosts, updatePost } from '@/lib/api/posts.client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('posts client', () => {
@@ -89,5 +89,30 @@ describe('posts client', () => {
 		} as Response);
 
 		await expect(getPosts()).rejects.toThrow('cannot load posts');
+	});
+
+	it('updates a post with the expected fetch payload', async () => {
+		const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+			ok: true,
+			json: async () => ({ _id: 'post-1' }),
+		} as Response);
+
+		const result = await updatePost({
+			_id: 'post-1',
+			title: 'Updated title',
+			body: 'Updated body',
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith('/api/posts/post-1', {
+			method: 'PUT',
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				title: 'Updated title',
+				body: 'Updated body',
+			}),
+		});
+
+		expect(result).toEqual({ _id: 'post-1' });
 	});
 });

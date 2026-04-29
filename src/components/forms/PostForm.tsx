@@ -1,14 +1,15 @@
 import { Button, Paper, Stack, Textarea, TextInput } from '@mantine/core';
 import { hasLength, useForm } from '@mantine/form';
 import classes from '@/styles/form.module.css';
-import { createPost } from '@/lib/api/posts.client';
-import { notifications } from '@mantine/notifications';
-import { CreatePostFormProps } from '@/types/props.types';
+import { createPost, updatePost } from '@/lib/api/posts.client';
+import { PostFormProps } from '@/types/props.types';
 
-export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
+export function PostForm(props: PostFormProps) {
+	const isEdit = props.mode === 'edit';
+
 	const form = useForm({
 		mode: 'controlled',
-		initialValues: {
+		initialValues: props.initialValues ?? {
 			title: '',
 			body: '',
 		},
@@ -27,27 +28,22 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 
 	const handleSubmit = async () => {
 		try {
-			await createPost(form.values);
+			if (isEdit) {
+				await updatePost({ _id: props.postId!, ...form.values });
+			} else {
+				await createPost(form.values);
+			}
 		} catch (error) {
 			console.error(error);
-			notifications.show({
-				title: 'Post creation failed',
-				message: 'Something went wrong',
-				color: 'red',
-			});
+			props.onFailure();
 			return;
 		}
 
-		onSuccess();
-		notifications.show({
-			title: 'Success',
-			message: 'Post created successfully',
-			color: 'green',
-		});
+		props.onSuccess(form.values);
 	};
 
 	const handleCancel = () => {
-		onCancel();
+		props.onCancel();
 	};
 
 	return (
@@ -91,7 +87,7 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 							Cancel
 						</Button>
 						<Button type="submit" radius="md">
-							Create
+							{isEdit ? 'Save' : 'Create'}
 						</Button>
 					</div>
 				</Stack>

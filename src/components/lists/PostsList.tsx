@@ -69,6 +69,12 @@ export function PostsList({
 		[dateRange],
 	);
 
+	const handlePostUpdated = (updatedPost: PostInterface) => {
+		setPosts((prev) =>
+			prev.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
+		);
+	};
+
 	useEffect(() => {
 		setPosts([]);
 		setPage(1);
@@ -91,7 +97,7 @@ export function PostsList({
 	return (
 		<Stack gap="md">
 			{posts.map((p) => (
-				<Post key={p._id} {...p} />
+				<Post key={p._id} {...p} onUpdated={handlePostUpdated} />
 			))}
 
 			{hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
