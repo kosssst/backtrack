@@ -7,6 +7,8 @@ import { encrypt } from '@/lib/encryption/aes-265-gcm';
 import { connectMongoose } from '@/lib/db/mongoose';
 import { Posts } from '@/models/posts.model';
 
+export const runtime = 'nodejs';
+
 const MAX_POST_BYTES = 32 * 1024; // 32 KB
 
 export async function PUT(
@@ -41,10 +43,9 @@ export async function PUT(
 	if (!body || body.length > 20_000)
 		return NextResponse.json({ message: 'Invalid content' }, { status: 400 });
 
-	const titleEnc = await encrypt(title, session.user.id);
-	const bodyEnc = await encrypt(body, session.user.id);
-
 	try {
+		const titleEnc = await encrypt(title, session.user.id);
+		const bodyEnc = await encrypt(body, session.user.id);
 		await connectMongoose();
 		const updateResult = await Posts.updateOne(
 			{ _id: postId, authorId: session.user.id },

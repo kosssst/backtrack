@@ -26,7 +26,6 @@ export interface CreatePostRequestPayload {
 }
 
 export interface UpdatePostRequestPayload {
-	_id: string;
 	title: string;
 	body: string;
 }

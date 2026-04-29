@@ -51,16 +51,26 @@ export async function POST(req: Request) {
 		return NextResponse.json({ message: 'Invalid content' }, { status: 400 });
 	}
 
-	const titleEnc = await encrypt(title, session.user.id);
-	const bodyEnc = await encrypt(body, session.user.id);
+	let post;
 
-	await connectMongoose();
+	try {
+		const titleEnc = await encrypt(title, session.user.id);
+		const bodyEnc = await encrypt(body, session.user.id);
 
-	const post = await Posts.create({
-		titleEnc: { v: 1, ...titleEnc },
-		bodyEnc: { v: 1, ...bodyEnc },
-		authorId: session.user.id,
-	});
+		await connectMongoose();
+
+		post = await Posts.create({
+			titleEnc: { v: 1, ...titleEnc },
+			bodyEnc: { v: 1, ...bodyEnc },
+			authorId: session.user.id,
+		});
+	} catch (error) {
+		logger.error(error);
+		return NextResponse.json(
+			{ message: 'Unable to create a post' },
+			{ status: 500 },
+		);
+	}
 
 	return NextResponse.json({ _id: post._id }, { status: 201 });
 }
