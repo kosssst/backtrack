@@ -50,7 +50,8 @@ export async function PUT(
 			{ _id: postId, authorId: session.user.id },
 			{ titleEnc: { v: 1, ...titleEnc }, bodyEnc: { v: 1, ...bodyEnc } },
 		);
-		if (updateResult.matchedCount === 0) return NextResponse.json({ message: 'Post not found'}, { status: 404 });
+		if (updateResult.matchedCount === 0)
+			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 	} catch (error) {
 		logger.error(error);
 		return NextResponse.json(
@@ -75,8 +76,12 @@ export async function DELETE(
 
 	try {
 		await connectMongoose();
-		const deleteResult = await Posts.deleteOne({ _id: postId, authorId: session.user.id });
-		if (deleteResult.deletedCount === 0) return NextResponse.json({ message: 'Post not found'}, { status: 404 });
+		const deleteResult = await Posts.deleteOne({
+			_id: postId,
+			authorId: session.user.id,
+		});
+		if (deleteResult.deletedCount === 0)
+			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 	} catch (error) {
 		logger.error(error);
 		return NextResponse.json(
