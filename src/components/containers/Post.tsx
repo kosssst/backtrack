@@ -70,7 +70,7 @@ export function Post(props: PostProps) {
 					notifications.show({
 						color: 'green',
 						title: 'Success',
-						message: 'Post deleted Successfully',
+						message: 'Post deleted successfully',
 					});
 				} catch {
 					notifications.show({
