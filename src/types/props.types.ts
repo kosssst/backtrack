@@ -1,8 +1,17 @@
 import { DatesRangeValue } from '@mantine/dates';
 
-export type CreatePostFormProps = {
-	onSuccess: () => void;
+export type PostFormValues = {
+	title: string;
+	body: string;
+};
+
+export type PostFormProps = {
+	mode?: 'create' | 'edit';
+	postId?: string;
+	initialValues?: PostFormValues;
+	onSuccess: (values: PostFormValues) => void;
 	onCancel: () => void;
+	onFailure: () => void;
 };
 
 export type PostsListProps = {

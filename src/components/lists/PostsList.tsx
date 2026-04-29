@@ -50,6 +50,8 @@ export function PostsList({
 				setMaxPage(data.maxPage);
 				setPage(data.page);
 				setPosts((prev) => {
+					if (targetPage === 1) return data.posts;
+
 					const seen = new Set(prev.map((p) => p._id));
 					const next = data.posts.filter((p) => !seen.has(p._id));
 					return [...prev, ...next];
@@ -69,15 +71,24 @@ export function PostsList({
 		[dateRange],
 	);
 
-	useEffect(() => {
-		setPosts([]);
-		setPage(1);
-		setMaxPage(null);
+	const handlePostUpdated = (updatedPost: PostInterface) => {
+		setPosts((prev) =>
+			prev.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
+		);
+	};
 
+	const handlePostDeleted = (postId: string) => {
+		setPosts((prev) => prev.filter((post) => post._id !== postId));
+	};
+
+	useEffect(() => {
 		loadingRef.current = false;
 		maxPageRef.current = null;
 
-		void loadPage(1);
+		void (async () => {
+			await Promise.resolve();
+			await loadPage(1);
+		})();
 	}, [reloadKey, loadPage]);
 
 	useEffect(() => {
@@ -85,13 +96,16 @@ export function PostsList({
 		if (!hasMore) return;
 		if (loadingRef.current) return;
 
-		void loadPage(page + 1);
+		void (async () => {
+			await Promise.resolve();
+			await loadPage(page + 1);
+		})();
 	}, [entry?.isIntersecting, page, hasMore, loadPage]);
 
 	return (
 		<Stack gap="md">
 			{posts.map((p) => (
-				<Post key={p._id} {...p} />
+				<Post key={p._id} {...p} onUpdated={handlePostUpdated} onDeleted={handlePostDeleted} />
 			))}
 
 			{hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}

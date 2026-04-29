@@ -7,6 +7,11 @@ export interface PostInterface {
 	updatedAt: string;
 }
 
+export type PostProps = PostInterface & {
+	onUpdated: (post: PostInterface) => void;
+	onDeleted: (postId: string) => void;
+};
+
 export interface PostsResponse {
 	posts: PostInterface[];
 	page: number;
@@ -16,6 +21,12 @@ export interface PostsResponse {
 }
 
 export interface CreatePostRequestPayload {
+	title: string;
+	body: string;
+}
+
+export interface UpdatePostRequestPayload {
+	_id: string;
 	title: string;
 	body: string;
 }
