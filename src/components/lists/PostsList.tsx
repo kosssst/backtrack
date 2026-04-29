@@ -29,10 +29,12 @@ export function PostsList({
 	const { ref: sentinelRef, entry } = useIntersection({ threshold: 1 });
 
 	const loadPage = useCallback(
-		async (targetPage: number) => {
-			if (loadingRef.current) return;
-			if (maxPageRef.current !== null && targetPage > maxPageRef.current)
+		async (targetPage: number, isReserved = false) => {
+			if (!isReserved && loadingRef.current) return;
+			if (maxPageRef.current !== null && targetPage > maxPageRef.current) {
+				if (isReserved) loadingRef.current = false;
 				return;
+			}
 
 			loadingRef.current = true;
 
@@ -71,6 +73,21 @@ export function PostsList({
 		[dateRange],
 	);
 
+	const scheduleLoadPage = useCallback(
+		(targetPage: number) => {
+			if (loadingRef.current) return;
+			if (maxPageRef.current !== null && targetPage > maxPageRef.current)
+				return;
+
+			loadingRef.current = true;
+
+			queueMicrotask(() => {
+				void loadPage(targetPage, true);
+			});
+		},
+		[loadPage],
+	);
+
 	const handlePostUpdated = (updatedPost: PostInterface) => {
 		setPosts((prev) =>
 			prev.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
@@ -85,22 +102,16 @@ export function PostsList({
 		loadingRef.current = false;
 		maxPageRef.current = null;
 
-		void (async () => {
-			await Promise.resolve();
-			await loadPage(1);
-		})();
-	}, [reloadKey, loadPage]);
+		scheduleLoadPage(1);
+	}, [reloadKey, scheduleLoadPage]);
 
 	useEffect(() => {
 		if (!entry?.isIntersecting) return;
 		if (!hasMore) return;
 		if (loadingRef.current) return;
 
-		void (async () => {
-			await Promise.resolve();
-			await loadPage(page + 1);
-		})();
-	}, [entry?.isIntersecting, page, hasMore, loadPage]);
+		scheduleLoadPage(page + 1);
+	}, [entry?.isIntersecting, page, hasMore, scheduleLoadPage]);
 
 	return (
 		<Stack gap="md">

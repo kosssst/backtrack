@@ -103,6 +103,7 @@ export function Post(props: PostProps) {
 								<ActionIcon
 									variant="subtle"
 									color="gray"
+									aria-label="edit-button"
 									onClick={() => {
 										setEditing(true);
 									}}
@@ -112,6 +113,7 @@ export function Post(props: PostProps) {
 								<ActionIcon
 									variant="subtle"
 									color="gray"
+									aria-label="delete-button"
 									onClick={handleDelete}
 								>
 									<IconTrash className={classes.deleteButton} size={20} />
