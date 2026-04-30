@@ -1,12 +1,12 @@
-import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth/auth';
-import { ProfilePageView } from '@/components/views/ProfilePageView';
+import { getCurrentSession } from '@/features/auth/server/session';
+import { ProfilePageView } from '@/features/profile/components/ProfilePageView';
 
+/**
+ * Renders the current user's profile settings page.
+ */
 export default async function ProfilePage() {
-	const auth = await getAuth();
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+	const session = await getCurrentSession();
+
 	if (!session?.user) return null;
 
 	return <ProfilePageView user={session.user} />;

@@ -12,20 +12,20 @@ const routeMocks = vi.hoisted(() => ({
 	loggerError: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/require-api-session', () => ({
+vi.mock('@/features/auth/server/require-api-session', () => ({
 	requireApiSession: routeMocks.requireApiSession,
 }));
 
-vi.mock('@/lib/db/mongoose', () => ({
+vi.mock('@/shared/database/mongoose', () => ({
 	connectMongoose: routeMocks.connectMongoose,
 }));
 
-vi.mock('@/lib/encryption/aes-265-gcm', () => ({
+vi.mock('@/shared/security/encryption/aes-256-gcm', () => ({
 	encrypt: routeMocks.encrypt,
 	decrypt: routeMocks.decrypt,
 }));
 
-vi.mock('@/models/posts.model', () => ({
+vi.mock('@/features/posts/server/post.model', () => ({
 	Posts: {
 		countDocuments: routeMocks.countDocuments,
 		create: routeMocks.create,
@@ -33,11 +33,11 @@ vi.mock('@/models/posts.model', () => ({
 	},
 }));
 
-vi.mock('@/lib/utils/json', () => ({
+vi.mock('@/shared/utils/json', () => ({
 	readJsonWithLimit: routeMocks.readJsonWithLimit,
 }));
 
-vi.mock('@/lib/logger', () => ({
+vi.mock('@/shared/logging/logger', () => ({
 	logger: {
 		error: routeMocks.loggerError,
 	},
@@ -213,6 +213,48 @@ describe('posts route', () => {
 
 		expect(response.status).toBe(201);
 		expect(await response.json()).toEqual({ _id: 'post-1' });
+	});
+
+	it('returns 500 and logs when creating a post fails', async () => {
+		routeMocks.requireApiSession.mockResolvedValue({
+			session: { user: { id: 'user-1' } },
+			errorResponse: null,
+		});
+
+		routeMocks.readJsonWithLimit.mockResolvedValue({
+			title: 'My title',
+			body: 'My body',
+		});
+
+		routeMocks.encrypt
+			.mockResolvedValueOnce({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv1'),
+				ct: Buffer.from('ct1'),
+				tag: Buffer.from('tag1'),
+			})
+			.mockResolvedValueOnce({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv2'),
+				ct: Buffer.from('ct2'),
+				tag: Buffer.from('tag2'),
+			});
+
+		const createError = new Error('Mongo create failed');
+		routeMocks.create.mockRejectedValue(createError);
+
+		const response = await POST(
+			jsonRequest('http://localhost/api/posts', {
+				title: 'My title',
+				body: 'My body',
+			}),
+		);
+
+		expect(routeMocks.loggerError).toHaveBeenCalledWith(createError);
+		expect(response.status).toBe(500);
+		expect(await response.json()).toEqual({
+			message: 'Unable to create a post',
+		});
 	});
 
 	it('returns the auth error response when GET is unauthorized', async () => {

@@ -1,21 +1,12 @@
-import { LoginForm } from '@/components/forms/LoginForm';
-import { AuthPageProps } from '@/types/props.types';
-import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth/auth';
-import { getSafeRedirectPath } from '@/lib/auth/redirect';
-import { redirect } from 'next/navigation';
+import { LoginForm } from '@/features/auth/components/LoginForm';
+import { AuthPageProps } from '@/features/auth/types';
+import { requireAnonymousAuthPage } from '@/features/auth/server/auth-page';
 
+/**
+ * Renders the login page for anonymous users.
+ */
 export default async function LoginPage({ searchParams }: AuthPageProps) {
-	const headerStore = await headers();
-	const params = await searchParams;
-	const redirectTo = getSafeRedirectPath(params.redirect);
-
-	const auth = await getAuth();
-	const session = await auth.api.getSession({
-		headers: headerStore,
-	});
-
-	if (session?.user) redirect(redirectTo);
+	const redirectTo = await requireAnonymousAuthPage(searchParams);
 
 	return <LoginForm redirectTo={redirectTo} />;
 }
