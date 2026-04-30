@@ -18,7 +18,7 @@ export function MainHeader({ user }: UserProfileProps) {
 					<Group gap={0}>
 						<Link href="/" className={classes.logoLink}>
 							<Image
-								src="/backtrack-full-logo-v5.svg"
+								src="/backtrack-full-logo.svg"
 								alt="Backtrack"
 								className={classes.fullLogo}
 								h={50}
