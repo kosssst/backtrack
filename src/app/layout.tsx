@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import '../styles/globals.css';
+import '@/shared/styles/globals.css';
 import React from 'react';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';

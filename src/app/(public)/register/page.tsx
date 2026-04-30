@@ -1,9 +1,9 @@
-import { RegisterForm } from '@/components/forms/RegisterForm';
+import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth/auth';
-import { getSafeRedirectPath } from '@/lib/auth/redirect';
+import { getAuth } from '@/features/auth/server/auth';
+import { getSafeRedirectPath } from '@/features/auth/server/redirect';
 import { redirect } from 'next/navigation';
-import { AuthPageProps } from '@/types/props.types';
+import { AuthPageProps } from '@/features/auth/types';
 
 export default async function RegisterPage({ searchParams }: AuthPageProps) {
 	const headerStore = await headers();

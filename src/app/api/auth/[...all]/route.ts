@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { getAuthHandlers } from '@/lib/auth/auth';
+import { getAuthHandlers } from '@/features/auth/server/auth';
 
 export const runtime = 'nodejs';
 

@@ -1,8 +1,8 @@
-import { LoginForm } from '@/components/forms/LoginForm';
-import { AuthPageProps } from '@/types/props.types';
+import { LoginForm } from '@/features/auth/components/LoginForm';
+import { AuthPageProps } from '@/features/auth/types';
 import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth/auth';
-import { getSafeRedirectPath } from '@/lib/auth/redirect';
+import { getAuth } from '@/features/auth/server/auth';
+import { getSafeRedirectPath } from '@/features/auth/server/redirect';
 import { redirect } from 'next/navigation';
 
 export default async function LoginPage({ searchParams }: AuthPageProps) {

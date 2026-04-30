@@ -12,20 +12,20 @@ const routeMocks = vi.hoisted(() => ({
 	loggerError: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/require-api-session', () => ({
+vi.mock('@/features/auth/server/require-api-session', () => ({
 	requireApiSession: routeMocks.requireApiSession,
 }));
 
-vi.mock('@/lib/db/mongoose', () => ({
+vi.mock('@/shared/database/mongoose', () => ({
 	connectMongoose: routeMocks.connectMongoose,
 }));
 
-vi.mock('@/lib/encryption/aes-265-gcm', () => ({
+vi.mock('@/shared/security/encryption/aes-256-gcm', () => ({
 	encrypt: routeMocks.encrypt,
 	decrypt: routeMocks.decrypt,
 }));
 
-vi.mock('@/models/posts.model', () => ({
+vi.mock('@/features/posts/server/post.model', () => ({
 	Posts: {
 		countDocuments: routeMocks.countDocuments,
 		create: routeMocks.create,
@@ -33,11 +33,11 @@ vi.mock('@/models/posts.model', () => ({
 	},
 }));
 
-vi.mock('@/lib/utils/json', () => ({
+vi.mock('@/shared/utils/json', () => ({
 	readJsonWithLimit: routeMocks.readJsonWithLimit,
 }));
 
-vi.mock('@/lib/logger', () => ({
+vi.mock('@/shared/logging/logger', () => ({
 	logger: {
 		error: routeMocks.loggerError,
 	},

@@ -22,6 +22,7 @@
     - [Prerequisites](#prerequisites)
     - [Run](#run)
     - [Development run](#development-run)
+- [Project structure](#project-structure)
 - [Limitations](#limitations)
 - [Roadmap ideas](#roadmap-ideas)
 - [Contributing](#contributing)
@@ -167,6 +168,16 @@ If you want hot reload during development:
 ```bash
 npm run dev
 ```
+
+## Project structure
+
+Backtrack uses a feature-based source layout:
+
+- `src/features/auth` owns authentication UI, auth client helpers, server auth setup, and redirect/session guards.
+- `src/features/posts` owns post UI, client API calls, encrypted persistence, route handlers, and post-specific utilities.
+- `src/features/profile` owns profile settings UI and user display components.
+- `src/shared` contains cross-feature infrastructure such as layout, environment parsing, logging, database connections, encryption primitives, styles, and generic utilities.
+- `src/app` stays focused on Next.js routing and delegates feature behavior to `src/features`.
 
 ## Limitations
 

@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
-import { getAuth } from '@/lib/auth/auth';
-import { ProfilePageView } from '@/components/views/ProfilePageView';
+import { getAuth } from '@/features/auth/server/auth';
+import { ProfilePageView } from '@/features/profile/components/ProfilePageView';
 
 export default async function ProfilePage() {
 	const auth = await getAuth();

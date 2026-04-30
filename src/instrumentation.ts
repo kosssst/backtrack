@@ -1,7 +1,7 @@
-import { logger } from './lib/logger';
-import { validateRuntimeEnv } from '@/lib/env/startup';
-import { getLoggerEnv } from '@/lib/env/runtime/logger-env';
-import { getAuthEnv } from '@/lib/env/runtime/auth-env';
+import { logger } from '@/shared/logging/logger';
+import { validateRuntimeEnv } from '@/shared/config/env/startup';
+import { getLoggerEnv } from '@/shared/config/env/runtime/logger-env';
+import { getAuthEnv } from '@/shared/config/env/runtime/auth-env';
 
 export function register() {
 	validateRuntimeEnv();

@@ -1,10 +1,10 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getAuth } from '@/lib/auth/auth';
-import { buildAuthRedirect } from '@/lib/auth/redirect';
-import { MainHeader } from '@/components/headers/MainHeader';
-import { MainFooter } from '@/components/footers/MainFooter';
-import classes from '@/styles/ProtectedLayout.module.css';
+import { getAuth } from '@/features/auth/server/auth';
+import { buildAuthRedirect } from '@/features/auth/server/redirect';
+import { MainHeader } from '@/shared/components/layout/MainHeader';
+import { MainFooter } from '@/shared/components/layout/MainFooter';
+import classes from '@/shared/components/layout/ProtectedLayout.module.css';
 
 export default async function ProtectedLayout({
 	children,

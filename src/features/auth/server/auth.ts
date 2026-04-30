@@ -1,0 +1,56 @@
+import { betterAuth } from 'better-auth';
+import { mongodbAdapter } from 'better-auth/adapters/mongodb';
+import { nextCookies, toNextJsHandler } from 'better-auth/next-js';
+import { MongoClient } from 'mongodb';
+import { getDbEnv } from '@/shared/config/env/runtime/db-env';
+import { getAuthEnv } from '@/shared/config/env/runtime/auth-env';
+
+const DB_NAME = 'backtrack';
+
+type AuthInstance = Awaited<ReturnType<typeof createAuth>>;
+
+let mongoClientPromise: Promise<MongoClient> | null = null;
+let authPromise: Promise<AuthInstance> | null = null;
+let handlersPromise: Promise<ReturnType<typeof toNextJsHandler>> | null = null;
+
+async function getMongoClient(): Promise<MongoClient> {
+	if (!mongoClientPromise) {
+		const { MONGODB_URL } = getDbEnv();
+		// Better Auth and Mongoose use separate clients, so this cache is scoped to Better Auth only.
+		mongoClientPromise = new MongoClient(MONGODB_URL).connect();
+	}
+
+	return mongoClientPromise;
+}
+
+async function createAuth() {
+	const client = await getMongoClient();
+	const db = client.db(DB_NAME);
+	const { APP_ORIGIN } = getAuthEnv();
+
+	return betterAuth({
+		baseURL: APP_ORIGIN,
+		database: mongodbAdapter(db),
+		emailAndPassword: {
+			enabled: true,
+		},
+		plugins: [nextCookies()],
+	});
+}
+
+export async function getAuth() {
+	if (!authPromise) {
+		// Reuse the Better Auth instance across route handlers and server components.
+		authPromise = createAuth();
+	}
+
+	return authPromise;
+}
+
+export async function getAuthHandlers() {
+	if (!handlersPromise) {
+		handlersPromise = getAuth().then((auth) => toNextJsHandler(auth));
+	}
+
+	return handlersPromise;
+}
