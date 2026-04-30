@@ -34,15 +34,39 @@ vi.mock('@/features/posts/components/Post', () => ({
 		_id,
 		title,
 		onDeleted,
+		onUpdated,
 	}: {
 		_id: string;
 		title: string;
 		onDeleted: (postId: string) => void;
+		onUpdated: (post: {
+			_id: string;
+			title: string;
+			body: string;
+			authorId: string;
+			createdAt: string;
+			updatedAt: string;
+		}) => void;
 	}) => (
 		<div>
 			<span>{title}</span>
 			<button type="button" onClick={() => onDeleted(_id)}>
 				Delete {title}
+			</button>
+			<button
+				type="button"
+				onClick={() =>
+					onUpdated({
+						_id,
+						title: `Updated ${title}`,
+						body: 'Updated body',
+						authorId: 'user-1',
+						createdAt: '2026-02-23T21:23:01.104Z',
+						updatedAt: '2026-02-24T21:23:01.104Z',
+					})
+				}
+			>
+				Update {title}
 			</button>
 		</div>
 	),
@@ -213,5 +237,62 @@ describe('PostsList', () => {
 			expect(screen.queryByText('First title')).not.toBeInTheDocument();
 		});
 		expect(screen.getByText('Second title')).toBeInTheDocument();
+	});
+
+	it('updates a post in the list when a child reports updated values', async () => {
+		vi.mocked(getPosts).mockResolvedValue({
+			posts: [
+				{
+					_id: 'post-1',
+					title: 'First title',
+					body: 'First body',
+					authorId: 'user-1',
+					createdAt: '2026-02-23T21:23:01.104Z',
+					updatedAt: '2026-02-23T21:23:01.104Z',
+				},
+			],
+			page: 1,
+			maxPage: 1,
+			total: 1,
+			limit: 20,
+		});
+
+		renderWithMantine(<PostsList dateRange={emptyDateRange} />);
+
+		await waitFor(() => {
+			expect(screen.getByText('First title')).toBeInTheDocument();
+		});
+
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Update First title' }),
+		);
+
+		expect(screen.getByText('Updated First title')).toBeInTheDocument();
+		expect(screen.queryByText('First title')).not.toBeInTheDocument();
+	});
+
+	it('does not load another page when the first page is already the max page', async () => {
+		vi.mocked(getPosts).mockResolvedValue({
+			posts: [],
+			page: 1,
+			maxPage: 1,
+			total: 0,
+			limit: 20,
+		});
+
+		const { rerender } = renderWithMantine(
+			<PostsList dateRange={emptyDateRange} />,
+		);
+
+		await waitFor(() => {
+			expect(getPosts).toHaveBeenCalledTimes(1);
+		});
+
+		postsListMocks.intersection.isIntersecting = true;
+		rerender(<PostsList dateRange={emptyDateRange} />);
+
+		await Promise.resolve();
+
+		expect(getPosts).toHaveBeenCalledTimes(1);
 	});
 });

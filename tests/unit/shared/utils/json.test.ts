@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readJsonWithLimit } from '@/shared/utils/json';
 
 function streamFromText(text: string) {
@@ -69,6 +69,19 @@ describe('readJsonWithLimit', () => {
 		});
 	});
 
+	it('parses valid JSON when Content-Length is exactly the byte limit', async () => {
+		const text = JSON.stringify({ ok: true });
+		const byteLength = new TextEncoder().encode(text).byteLength;
+		const request = makeRequest({
+			contentLength: byteLength.toString(),
+			text,
+		});
+
+		await expect(readJsonWithLimit(request, byteLength)).resolves.toEqual({
+			ok: true,
+		});
+	});
+
 	it('throws when maxBytes is not a positive integer', async () => {
 		const request = makeRequest({
 			text: JSON.stringify({ ok: true }),
@@ -94,9 +107,35 @@ describe('readJsonWithLimit', () => {
 		);
 	});
 
+	it('throws when content type is missing', async () => {
+		const request = makeRequest({
+			contentType: '',
+			text: '{"ok":true}',
+		});
+
+		await expectReadJsonWithLimitToThrow(
+			request,
+			1024,
+			'Content-Type must include "application/json"',
+		);
+	});
+
 	it('throws when Content-Length is invalid', async () => {
 		const request = makeRequest({
 			contentLength: 'not-a-number',
+			text: '{"ok":true}',
+		});
+
+		await expectReadJsonWithLimitToThrow(
+			request,
+			1024,
+			'Invalid Content-Length',
+		);
+	});
+
+	it('throws when Content-Length is negative', async () => {
+		const request = makeRequest({
+			contentLength: '-1',
 			text: '{"ok":true}',
 		});
 
@@ -144,5 +183,30 @@ describe('readJsonWithLimit', () => {
 		});
 
 		await expectReadJsonWithLimitToThrow(request, 1024, 'Invalid JSON');
+	});
+
+	it('ignores empty stream reads while parsing valid JSON', async () => {
+		const encoded = new TextEncoder().encode('{"ok":true}');
+		const request = {
+			headers: new Headers({ 'Content-Type': 'application/json' }),
+			body: {
+				getReader: () => {
+					const reads = [
+						{ done: false, value: undefined },
+						{ done: false, value: encoded },
+						{ done: true, value: undefined },
+					];
+
+					return {
+						read: async () => reads.shift(),
+						cancel: vi.fn(),
+					};
+				},
+			},
+		} as unknown as Request;
+
+		await expect(readJsonWithLimit(request, 1024)).resolves.toEqual({
+			ok: true,
+		});
 	});
 });

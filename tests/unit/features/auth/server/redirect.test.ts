@@ -30,6 +30,10 @@ describe('redirect helpers', () => {
 		expect(getSafeRedirectPath('/register')).toBe('/');
 	});
 
+	it('falls back to root when URL parsing fails', () => {
+		expect(getSafeRedirectPath('/\\')).toBe('/');
+	});
+
 	it('builds auth redirect with encoded return target only when safe', () => {
 		expect(buildAuthRedirect('login', '/profile?tab=security')).toBe(
 			'/login?redirect=%2Fprofile%3Ftab%3Dsecurity',

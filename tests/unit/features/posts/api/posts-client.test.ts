@@ -87,6 +87,29 @@ describe('posts client', () => {
 		);
 	});
 
+	it('does not add date parameters for an incomplete date range', async () => {
+		const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				posts: [],
+				page: 1,
+				maxPage: 1,
+				total: 0,
+				limit: 20,
+			}),
+		} as Response);
+
+		await getPosts({
+			from: { toString: () => '2026-03-01' } as never,
+			to: null,
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith('/api/posts?page=1&limit=20', {
+			method: 'GET',
+			credentials: 'include',
+		});
+	});
+
 	it('throws the server response text when getPosts fails', async () => {
 		vi.spyOn(globalThis, 'fetch').mockResolvedValue({
 			ok: false,

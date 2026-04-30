@@ -32,15 +32,27 @@ vi.mock('@mantine/modals', () => ({
 vi.mock('@/features/posts/components/PostForm', () => ({
 	PostForm: ({
 		onSuccess,
+		onFailure,
+		onCancel,
 	}: {
 		onSuccess: (values: { title: string; body: string }) => void;
+		onFailure: () => void;
+		onCancel: () => void;
 	}) => (
-		<button
-			type="button"
-			onClick={() => onSuccess({ title: 'New title', body: 'New body' })}
-		>
-			Save
-		</button>
+		<div>
+			<button
+				type="button"
+				onClick={() => onSuccess({ title: 'New title', body: 'New body' })}
+			>
+				Save
+			</button>
+			<button type="button" onClick={onFailure}>
+				Fail save
+			</button>
+			<button type="button" onClick={onCancel}>
+				Cancel edit
+			</button>
+		</div>
 	),
 }));
 
@@ -103,6 +115,52 @@ describe('Post', () => {
 				updatedAt: expect.any(String),
 			});
 		});
+	});
+
+	it('shows a failure notification when the edit form reports failure', async () => {
+		renderWithMantine(
+			<Post
+				_id="post-1"
+				title="Old title"
+				body="Old body"
+				authorId="user-1"
+				createdAt="2026-02-23T21:23:01.104Z"
+				updatedAt="2026-02-23T21:23:01.104Z"
+				onUpdated={vi.fn()}
+				onDeleted={vi.fn()}
+			/>,
+		);
+
+		await userEvent.click(screen.getAllByRole('button')[0]);
+		await userEvent.click(screen.getByRole('button', { name: 'Fail save' }));
+
+		expect(postMocks.notify).toHaveBeenCalledWith({
+			color: 'red',
+			title: 'Failure',
+			message: 'Failed to update post',
+		});
+	});
+
+	it('cancels editing and returns to the read-only post card', async () => {
+		renderWithMantine(
+			<Post
+				_id="post-1"
+				title="Old title"
+				body="Old body"
+				authorId="user-1"
+				createdAt="2026-02-23T21:23:01.104Z"
+				updatedAt="2026-02-23T21:23:01.104Z"
+				onUpdated={vi.fn()}
+				onDeleted={vi.fn()}
+			/>,
+		);
+
+		await userEvent.click(screen.getAllByRole('button')[0]);
+		await userEvent.click(screen.getByRole('button', { name: 'Cancel edit' }));
+
+		expect(
+			screen.getByRole('heading', { name: 'Old title' }),
+		).toBeInTheDocument();
 	});
 
 	it('opens a confirmation modal when delete is clicked', async () => {

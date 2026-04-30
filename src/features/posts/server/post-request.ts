@@ -24,11 +24,19 @@ function normalizePostPayload(data: unknown): PostPayloadResult {
 	const title = (source?.title ?? '').toString().trim();
 	const body = (source?.body ?? '').toString().trim();
 
-	if (!title || title.length > POST_TITLE_MAX_LENGTH) {
+	if (!title) {
 		return { ok: false, message: 'Invalid title' };
 	}
 
-	if (!body || body.length > POST_BODY_MAX_LENGTH) {
+	if (title.length > POST_TITLE_MAX_LENGTH) {
+		return { ok: false, message: 'Invalid title' };
+	}
+
+	if (!body) {
+		return { ok: false, message: 'Invalid content' };
+	}
+
+	if (body.length > POST_BODY_MAX_LENGTH) {
 		return { ok: false, message: 'Invalid content' };
 	}
 

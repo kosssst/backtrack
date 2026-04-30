@@ -16,7 +16,7 @@ export function getSafeRedirectPath(value: string | null | undefined) {
 
 		if (BLOCKED_REDIRECT_PATHS.has(url.pathname)) return DEFAULT_REDIRECT_PATH;
 
-		return safePath || DEFAULT_REDIRECT_PATH;
+		return safePath;
 	} catch {
 		return DEFAULT_REDIRECT_PATH;
 	}

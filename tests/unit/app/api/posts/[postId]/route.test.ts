@@ -296,6 +296,47 @@ describe('posts/[postId] route', () => {
 			expect(await response.json()).toEqual({ _id: 'post-1' });
 		});
 
+		it('returns 404 when the post to update is not found', async () => {
+			routeMocks.requireApiSession.mockResolvedValue({
+				session: { user: { id: 'user-1' } },
+				errorResponse: null,
+			});
+
+			routeMocks.readJsonWithLimit.mockResolvedValue({
+				title: 'Updated title',
+				body: 'Updated body',
+			});
+
+			routeMocks.encrypt
+				.mockResolvedValueOnce({
+					alg: 'aes-256-gcm',
+					iv: Buffer.from('iv1'),
+					ct: Buffer.from('ct1'),
+					tag: Buffer.from('tag1'),
+				})
+				.mockResolvedValueOnce({
+					alg: 'aes-256-gcm',
+					iv: Buffer.from('iv2'),
+					ct: Buffer.from('ct2'),
+					tag: Buffer.from('tag2'),
+				});
+			routeMocks.updateOne.mockResolvedValue({
+				matchedCount: 0,
+				modifiedCount: 0,
+			});
+
+			const response = await PUT(
+				jsonRequest('http://localhost/api/posts/post-1', {
+					title: 'Updated title',
+					body: 'Updated body',
+				}),
+				params(),
+			);
+
+			expect(response.status).toBe(404);
+			expect(await response.json()).toEqual({ message: 'Post not found' });
+		});
+
 		it('returns 500 and logs when updateOne throws', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
@@ -387,6 +428,26 @@ describe('posts/[postId] route', () => {
 			});
 			expect(response.status).toBe(200);
 			expect(await response.json()).toEqual({ _id: 'post-1' });
+		});
+
+		it('returns 404 when the post to delete is not found', async () => {
+			routeMocks.requireApiSession.mockResolvedValue({
+				session: { user: { id: 'user-1' } },
+				errorResponse: null,
+			});
+
+			routeMocks.connectMongoose.mockResolvedValue(undefined);
+			routeMocks.deleteOne.mockResolvedValue({ deletedCount: 0 });
+
+			const response = await DELETE(
+				new Request('http://localhost/api/posts/post-1', {
+					method: 'DELETE',
+				}),
+				params('post-1'),
+			);
+
+			expect(response.status).toBe(404);
+			expect(await response.json()).toEqual({ message: 'Post not found' });
 		});
 
 		it('returns 500 and logs when deleteOne throws', async () => {

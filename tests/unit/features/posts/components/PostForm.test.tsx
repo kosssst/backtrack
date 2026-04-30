@@ -145,4 +145,24 @@ describe('PostForm', () => {
 
 		expect(onSuccess).not.toHaveBeenCalled();
 	});
+
+	it('calls onCancel when the cancel button is clicked', async () => {
+		const onSuccess = vi.fn();
+		const onCancel = vi.fn();
+		const onFailure = vi.fn();
+
+		renderWithMantine(
+			<PostForm
+				onSuccess={onSuccess}
+				onCancel={onCancel}
+				onFailure={onFailure}
+			/>,
+		);
+
+		await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+		expect(onCancel).toHaveBeenCalledTimes(1);
+		expect(createPost).not.toHaveBeenCalled();
+		expect(onSuccess).not.toHaveBeenCalled();
+	});
 });

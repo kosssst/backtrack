@@ -92,6 +92,56 @@ describe('UpdatePasswordForm', () => {
 		).toBeInTheDocument();
 	});
 
+	it('does not submit when the new password is too short', async () => {
+		renderWithMantine(<UpdatePasswordForm />);
+
+		await userEvent.type(
+			screen.getByLabelText(/^Current password/i),
+			'old-password',
+		);
+		await userEvent.type(screen.getByLabelText(/^New password/i), 'short');
+		await userEvent.type(screen.getByLabelText(/^Repeat password/i), 'short');
+		await userEvent.click(screen.getByRole('button', { name: 'Update' }));
+
+		await waitFor(() => {
+			expect(authClient.changePassword).not.toHaveBeenCalled();
+		});
+		expect(screen.getByText('Invalid password length')).toBeInTheDocument();
+	});
+
+	it('shows a generic failure notification for non-password auth errors', async () => {
+		vi.mocked(authClient.changePassword).mockImplementation(
+			async (_values: any, options: any) => {
+				options.onError({ error: { code: 'RATE_LIMITED' } });
+			},
+		);
+
+		renderWithMantine(<UpdatePasswordForm />);
+
+		await userEvent.type(
+			screen.getByLabelText(/^Current password/i),
+			'old-password',
+		);
+		await userEvent.type(
+			screen.getByLabelText(/^New password/i),
+			'new-password-123',
+		);
+		await userEvent.type(
+			screen.getByLabelText(/^Repeat password/i),
+			'new-password-123',
+		);
+		await userEvent.click(screen.getByRole('button', { name: 'Update' }));
+
+		await waitFor(() => {
+			expect(updatePasswordMocks.notify).toHaveBeenCalledWith({
+				title: 'Failure',
+				message: 'Failed to change password',
+				color: 'red',
+			});
+		});
+		expect(screen.queryByText('Incorrect password')).not.toBeInTheDocument();
+	});
+
 	it('sets a field error when the current password is invalid', async () => {
 		vi.mocked(authClient.changePassword).mockImplementation(
 			async (_values: any, options: any) => {

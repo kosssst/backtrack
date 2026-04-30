@@ -52,6 +52,28 @@ describe('connectMongoose', () => {
 		expect(mongooseMocks.debug).toHaveBeenCalledWith('Mongoose connected');
 	});
 
+	it('reuses the pending connection promise for concurrent calls', async () => {
+		const connection = { name: 'conn' };
+		let resolveConnection!: (value: unknown) => void;
+		mongooseMocks.connect.mockReturnValue(
+			new Promise((resolve) => {
+				resolveConnection = resolve;
+			}),
+		);
+
+		const { connectMongoose } = await import('@/shared/database/mongoose');
+
+		const first = connectMongoose();
+		const second = connectMongoose();
+		resolveConnection(connection);
+
+		await expect(Promise.all([first, second])).resolves.toEqual([
+			connection,
+			connection,
+		]);
+		expect(mongooseMocks.connect).toHaveBeenCalledTimes(1);
+	});
+
 	it('clears the cached promise when the first connection attempt fails', async () => {
 		mongooseMocks.connect
 			.mockRejectedValueOnce(new Error('first failure'))
