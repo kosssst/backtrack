@@ -15,8 +15,10 @@ const PostSchema = new Schema(
 	{ timestamps: true },
 );
 
+/** Encrypted post document shape inferred from the Mongoose schema. */
 export type PostEntity = InferSchemaType<typeof PostSchema>;
 
+/** Mongoose model for encrypted post documents. */
 export const Posts: Model<PostEntity> =
 	(mongoose.models.Post as Model<PostEntity>) ||
 	mongoose.model<PostEntity>('Post', PostSchema);

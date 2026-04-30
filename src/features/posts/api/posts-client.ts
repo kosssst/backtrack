@@ -1,21 +1,25 @@
-import { PostsResponse } from '@/features/posts/types';
+import { PostContent, PostsResponse } from '@/features/posts/types';
 import { DateValue } from '@mantine/dates';
+import { fetchJson } from '@/shared/http/fetch-json';
 
 const POSTS_ENDPOINT = '/api/posts';
 
-export async function createPost(input: { title: string; body: string }) {
-	const res = await fetch(POSTS_ENDPOINT, {
+/**
+ * Creates a post through the authenticated browser session.
+ */
+export function createPost(input: PostContent) {
+	return fetchJson<{ _id: string }>(POSTS_ENDPOINT, {
 		method: 'POST',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(input),
 	});
-
-	if (!res.ok) throw new Error(await res.text());
-	return res.json();
 }
 
-export async function getPosts(params?: {
+/**
+ * Loads one page of posts. Date filtering is sent only when both range ends are present.
+ */
+export function getPosts(params?: {
 	page?: number;
 	limit?: number;
 	from?: DateValue;
@@ -34,38 +38,34 @@ export async function getPosts(params?: {
 		searchParams.set('to', params.to.toString());
 	}
 
-	const res = await fetch(`${POSTS_ENDPOINT}?${searchParams.toString()}`, {
-		method: 'GET',
-		credentials: 'include',
-	});
-
-	if (!res.ok) throw new Error(await res.text());
-	return (await res.json()) as PostsResponse;
+	return fetchJson<PostsResponse>(
+		`${POSTS_ENDPOINT}?${searchParams.toString()}`,
+		{
+			method: 'GET',
+			credentials: 'include',
+		},
+	);
 }
 
-export async function updatePost(input: {
-	_id: string;
-	title: string;
-	body: string;
-}) {
+/**
+ * Updates a post owned by the current user.
+ */
+export function updatePost(input: PostContent & { _id: string }) {
 	const { _id, ...requestBody } = input;
-	const res = await fetch(`${POSTS_ENDPOINT}/${_id}`, {
+	return fetchJson<{ _id: string }>(`${POSTS_ENDPOINT}/${_id}`, {
 		method: 'PUT',
 		credentials: 'include',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(requestBody),
 	});
-
-	if (!res.ok) throw new Error(await res.text());
-	return res.json();
 }
 
-export async function deletePost(input: { _id: string }) {
-	const res = await fetch(`${POSTS_ENDPOINT}/${input._id}`, {
+/**
+ * Deletes a post owned by the current user.
+ */
+export function deletePost(input: { _id: string }) {
+	return fetchJson<{ _id: string }>(`${POSTS_ENDPOINT}/${input._id}`, {
 		method: 'DELETE',
 		credentials: 'include',
 	});
-
-	if (!res.ok) throw new Error(await res.text());
-	return res.json();
 }

@@ -2,6 +2,9 @@ import { Text } from '@mantine/core';
 import { publicEnv } from '@/shared/config/public-env';
 import classes from './VersionTag.module.css';
 
+/**
+ * Renders the public application version tag.
+ */
 export function VersionTag() {
 	return (
 		<div className={classes.tag}>

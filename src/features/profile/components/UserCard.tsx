@@ -1,12 +1,15 @@
 'use client';
 
 import { Avatar, Button, Card, Stack, Text, Title } from '@mantine/core';
-import { UserProps } from '@/features/profile/types';
+import { UserProfileProps } from '@/features/profile/types';
 import { authClient } from '@/features/auth/auth-client';
 import { useRouter } from 'next/navigation';
-import { notifications } from '@mantine/notifications';
+import { showFailure } from '@/shared/notifications/app-notifications';
 
-export function UserCard({ user }: UserProps) {
+/**
+ * Renders the profile summary card and sign-out action.
+ */
+export function UserCard({ user }: UserProfileProps) {
 	const router = useRouter();
 	const handleLogout = async () => {
 		await authClient.signOut({
@@ -15,11 +18,7 @@ export function UserCard({ user }: UserProps) {
 					router.push('/login');
 				},
 				onError: () => {
-					notifications.show({
-						title: 'Failure',
-						message: 'Something went wrong',
-						color: 'red',
-					});
+					showFailure('Something went wrong');
 				},
 			},
 		});

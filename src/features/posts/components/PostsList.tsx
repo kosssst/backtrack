@@ -1,18 +1,23 @@
 'use client';
 
-import { PostInterface, PostsListProps } from '@/features/posts/types';
+import { Post as PostRecord, PostsListProps } from '@/features/posts/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getPosts } from '@/features/posts/api/posts-client';
-import { notifications } from '@mantine/notifications';
 import { useIntersection } from '@mantine/hooks';
 import { Center, Loader, Stack } from '@mantine/core';
 import { Post } from '@/features/posts/components/Post';
+import { showError } from '@/shared/notifications/app-notifications';
+import { reportClientError } from '@/shared/logging/report-client-error';
+import { POSTS_DEFAULT_PAGE_LIMIT } from '@/features/posts/constants';
 
+/**
+ * Renders an infinite-scrolling list of posts for the selected date range.
+ */
 export function PostsList({
 	reloadKey = 0,
 	dateRange = [null, null],
 }: PostsListProps) {
-	const [posts, setPosts] = useState<PostInterface[]>([]);
+	const [posts, setPosts] = useState<PostRecord[]>([]);
 	const [page, setPage] = useState(1);
 	const [maxPage, setMaxPage] = useState<number | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -43,7 +48,7 @@ export function PostsList({
 			try {
 				const data = await getPosts({
 					page: targetPage,
-					limit: 20,
+					limit: POSTS_DEFAULT_PAGE_LIMIT,
 					from: dateRange[0],
 					to: dateRange[1],
 				});
@@ -59,12 +64,8 @@ export function PostsList({
 					return [...prev, ...next];
 				});
 			} catch (error) {
-				console.error(error);
-				notifications.show({
-					title: 'Error',
-					message: 'Failed to fetch posts',
-					color: 'red',
-				});
+				reportClientError(error);
+				showError('Failed to fetch posts');
 			} finally {
 				loadingRef.current = false;
 				setLoading(false);
@@ -88,7 +89,7 @@ export function PostsList({
 		[loadPage],
 	);
 
-	const handlePostUpdated = (updatedPost: PostInterface) => {
+	const handlePostUpdated = (updatedPost: PostRecord) => {
 		setPosts((prev) =>
 			prev.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
 		);

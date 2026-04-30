@@ -1,8 +1,11 @@
-import { UserProps } from '@/features/profile/types';
+import { UserProfileProps } from '@/features/profile/types';
 import { Avatar, Text } from '@mantine/core';
 import classes from './UserCardSmall.module.css';
 
-export function UserCardSmall({ user }: UserProps) {
+/**
+ * Renders compact user identity information for the header.
+ */
+export function UserCardSmall({ user }: UserProfileProps) {
 	return (
 		<div className={classes.card}>
 			<Avatar name={user.name} radius="xl" className={classes.avatar} />

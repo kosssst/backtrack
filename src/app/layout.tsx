@@ -12,11 +12,15 @@ import {
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
 
+/** Default metadata for all application routes. */
 export const metadata: Metadata = {
 	title: 'Backtrack',
 	description: 'Created by kosssst',
 };
 
+/**
+ * Defines application-wide providers, styles, and document metadata.
+ */
 export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {

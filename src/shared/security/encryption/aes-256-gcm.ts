@@ -7,6 +7,9 @@ function makeAAD(userId: string) {
 	return Buffer.from(`user:${userId}`, 'utf8');
 }
 
+/**
+ * Encrypts plaintext for a specific user with AES-256-GCM.
+ */
 export async function encrypt(plaintext: string, userId: string) {
 	const { ENCRYPTION_KEY } = getCryptoEnv();
 	const iv = crypto.randomBytes(12);
@@ -25,6 +28,9 @@ export async function encrypt(plaintext: string, userId: string) {
 	} as AES256GCMEncryptedData;
 }
 
+/**
+ * Decrypts AES-256-GCM data that was encrypted for the same user id.
+ */
 export async function decrypt(
 	encryptedData: AES256GCMEncryptedData,
 	userId: string,

@@ -1,16 +1,26 @@
+/** Supported application log levels. */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
+/**
+ * Reads a required environment variable.
+ */
 export function required(name: string): string {
 	const value = process.env[name];
 	if (!value) throw new Error(`Missing env var: ${name}`);
 	return value;
 }
 
+/**
+ * Reads an optional environment variable, treating empty strings as absent.
+ */
 export function optional(name: string): string | undefined {
 	const value = process.env[name];
 	return value && value.length > 0 ? value : undefined;
 }
 
+/**
+ * Parses a required environment variable as an absolute URL string.
+ */
 export function parseUrl(name: string): string {
 	const value = required(name);
 	try {
@@ -20,6 +30,9 @@ export function parseUrl(name: string): string {
 	}
 }
 
+/**
+ * Parses a required environment variable as a MongoDB connection URL.
+ */
 export function parseMongoUrl(name: string): string {
 	const value = required(name);
 	try {
@@ -31,6 +44,9 @@ export function parseMongoUrl(name: string): string {
 	throw new Error(`${name} must be a valid MongoDB URL`);
 }
 
+/**
+ * Parses a required strict-base64 32-byte key.
+ */
 export function parseBase64Key32(name: string): Buffer {
 	const value = required(name).trim();
 	const buf = Buffer.from(value, 'base64');
@@ -45,6 +61,9 @@ export function parseBase64Key32(name: string): Buffer {
 	return buf;
 }
 
+/**
+ * Parses a boolean string with a default fallback.
+ */
 export function parseBoolean(
 	value: string | undefined,
 	fallback = false,
@@ -55,6 +74,9 @@ export function parseBoolean(
 	throw new Error(`Expected "true" or "false", got "${value}"`);
 }
 
+/**
+ * Parses a Pino-compatible log level.
+ */
 export function parseLogLevel(
 	value: string | undefined,
 	fallback: LogLevel,

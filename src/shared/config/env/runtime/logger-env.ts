@@ -1,17 +1,9 @@
 import 'server-only';
 import { parseBoolean, parseLogLevel } from '../parsers';
+import { createRuntimeEnvGetter } from '../cache';
 
-let cached:
-	| {
-			NODE_ENV: 'development' | 'production' | 'test';
-			DEBUG: boolean;
-			LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
-	  }
-	| undefined;
-
-export function getLoggerEnv() {
-	if (cached) return cached;
-
+/** Runtime logging configuration parsed from server environment variables. */
+export const getLoggerEnv = createRuntimeEnvGetter(() => {
 	const nodeEnv =
 		process.env.NODE_ENV === 'development' ||
 		process.env.NODE_ENV === 'production' ||
@@ -19,7 +11,7 @@ export function getLoggerEnv() {
 			? process.env.NODE_ENV
 			: 'development';
 
-	cached = {
+	return {
 		NODE_ENV: nodeEnv,
 		DEBUG: parseBoolean(process.env.DEBUG, false),
 		LOG_LEVEL: parseLogLevel(
@@ -27,6 +19,4 @@ export function getLoggerEnv() {
 			nodeEnv === 'production' ? 'info' : 'debug',
 		),
 	};
-
-	return cached;
-}
+});

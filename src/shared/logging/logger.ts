@@ -18,6 +18,7 @@ const logLevel = (() => {
 	}
 })();
 
+/** Server logger with redaction for common credential fields. */
 export const logger = pino({
 	level: logLevel,
 

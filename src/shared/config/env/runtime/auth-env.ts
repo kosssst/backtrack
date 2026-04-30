@@ -1,18 +1,9 @@
 import 'server-only';
 import { parseUrl, required } from '../parsers';
+import { createRuntimeEnvGetter } from '../cache';
 
-let cached:
-	| {
-			APP_ORIGIN: string;
-			BETTER_AUTH_SECRET: string;
-	  }
-	| undefined;
-
-export function getAuthEnv() {
-	if (cached) return cached;
-	cached = {
-		APP_ORIGIN: parseUrl('APP_ORIGIN'),
-		BETTER_AUTH_SECRET: required('BETTER_AUTH_SECRET'),
-	};
-	return cached;
-}
+/** Runtime auth configuration parsed from server environment variables. */
+export const getAuthEnv = createRuntimeEnvGetter(() => ({
+	APP_ORIGIN: parseUrl('APP_ORIGIN'),
+	BETTER_AUTH_SECRET: required('BETTER_AUTH_SECRET'),
+}));

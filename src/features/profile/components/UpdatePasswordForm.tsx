@@ -2,9 +2,19 @@
 
 import { useForm, matchesField } from '@mantine/form';
 import { authClient } from '@/features/auth/auth-client';
-import { notifications } from '@mantine/notifications';
 import { Button, PasswordInput, Stack } from '@mantine/core';
+import {
+	showFailure,
+	showSuccess,
+} from '@/shared/notifications/app-notifications';
+import {
+	PASSWORD_MAX_LENGTH,
+	PASSWORD_MIN_LENGTH,
+} from '@/features/auth/constants';
 
+/**
+ * Renders the account password change form.
+ */
 export function UpdatePasswordForm() {
 	const form = useForm({
 		mode: 'controlled',
@@ -15,7 +25,10 @@ export function UpdatePasswordForm() {
 		},
 		validate: {
 			newPassword: (value, values) => {
-				if (value.length < 8 || value.length > 50) {
+				if (
+					value.length < PASSWORD_MIN_LENGTH ||
+					value.length > PASSWORD_MAX_LENGTH
+				) {
 					return 'Invalid password length';
 				}
 
@@ -39,35 +52,20 @@ export function UpdatePasswordForm() {
 			{
 				onSuccess: () => {
 					form.reset();
-					notifications.show({
-						title: 'Success',
-						message: 'Password changed successfully',
-						color: 'green',
-					});
+					showSuccess('Password changed successfully');
 				},
 				onError: ({ error }) => {
-					if (error.code == 'INVALID_PASSWORD')
+					if (error.code === 'INVALID_PASSWORD') {
 						form.setFieldError('oldPassword', 'Incorrect password');
-					notifications.show({
-						title: 'Failure',
-						message: 'Failed to change password',
-						color: 'red',
-					});
+					}
+					showFailure('Failed to change password');
 				},
 			},
 		);
 	};
 
 	return (
-		<form
-			onSubmit={form.onSubmit(async () => {
-				if (!form.isValid()) {
-					form.validate();
-					return;
-				}
-				await handleSubmit();
-			})}
-		>
+		<form onSubmit={form.onSubmit(handleSubmit)}>
 			<Stack gap="md">
 				<PasswordInput
 					label="Current password"

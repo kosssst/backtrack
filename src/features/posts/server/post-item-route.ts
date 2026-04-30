@@ -1,16 +1,15 @@
 import { requireApiSession } from '@/features/auth/server/require-api-session';
-import { UpdatePostRequestPayload } from '@/features/posts/types';
-import { readJsonWithLimit } from '@/shared/utils/json';
 import { logger } from '@/shared/logging/logger';
 import { NextResponse } from 'next/server';
-import { encrypt } from '@/shared/security/encryption/aes-256-gcm';
-import { connectMongoose } from '@/shared/database/mongoose';
-import { Posts } from '@/features/posts/server/post.model';
+import { readPostPayload } from '@/features/posts/server/post-request';
+import {
+	deletePostForAuthor,
+	updatePostForAuthor,
+} from '@/features/posts/server/post.service';
 
-export const runtime = 'nodejs';
-
-const MAX_POST_BYTES = 32 * 1024;
-
+/**
+ * Updates an existing post owned by the authenticated user.
+ */
 export async function PUT(
 	req: Request,
 	{ params }: { params: Promise<{ postId: string }> },
@@ -22,39 +21,23 @@ export async function PUT(
 	}
 
 	const { postId } = await params;
+	const payload = await readPostPayload(req);
 
-	let data: UpdatePostRequestPayload;
-
-	try {
-		data = await readJsonWithLimit<UpdatePostRequestPayload>(
-			req,
-			MAX_POST_BYTES,
-		);
-	} catch (error) {
-		logger.error(error);
-		return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 });
-	}
-
-	const title = (data?.title ?? '').toString().trim();
-	const body = (data?.body ?? '').toString().trim();
-
-	if (!title || title.length > 200) {
-		return NextResponse.json({ message: 'Invalid title' }, { status: 400 });
-	}
-	if (!body || body.length > 20_000) {
-		return NextResponse.json({ message: 'Invalid content' }, { status: 400 });
+	if (!payload.ok) {
+		if (payload.cause) {
+			logger.error(payload.cause);
+		}
+		return NextResponse.json({ message: payload.message }, { status: 400 });
 	}
 
 	try {
-		// Updating by both id and author prevents cross-user writes even if a post id is guessed.
-		const titleEnc = await encrypt(title, session.user.id);
-		const bodyEnc = await encrypt(body, session.user.id);
-		await connectMongoose();
-		const updateResult = await Posts.updateOne(
-			{ _id: postId, authorId: session.user.id },
-			{ titleEnc: { v: 1, ...titleEnc }, bodyEnc: { v: 1, ...bodyEnc } },
+		const isUpdated = await updatePostForAuthor(
+			postId,
+			session.user.id,
+			payload.value,
 		);
-		if (updateResult.matchedCount === 0) {
+
+		if (!isUpdated) {
 			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 		}
 	} catch (error) {
@@ -68,6 +51,9 @@ export async function PUT(
 	return NextResponse.json({ _id: postId }, { status: 200 });
 }
 
+/**
+ * Deletes an existing post owned by the authenticated user.
+ */
 export async function DELETE(
 	req: Request,
 	{ params }: { params: Promise<{ postId: string }> },
@@ -80,12 +66,9 @@ export async function DELETE(
 	const { postId } = await params;
 
 	try {
-		await connectMongoose();
-		const deleteResult = await Posts.deleteOne({
-			_id: postId,
-			authorId: session.user.id,
-		});
-		if (deleteResult.deletedCount === 0) {
+		const isDeleted = await deletePostForAuthor(postId, session.user.id);
+
+		if (!isDeleted) {
 			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 		}
 	} catch (error) {

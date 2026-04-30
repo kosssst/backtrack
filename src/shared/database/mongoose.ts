@@ -17,6 +17,9 @@ global.mongooseCache = cache;
 
 mongoose.set('strictQuery', true);
 
+/**
+ * Opens and caches the Mongoose connection for server-side data access.
+ */
 export async function connectMongoose() {
 	const { MONGODB_URL } = getDbEnv();
 	if (cache.conn) return cache.conn;

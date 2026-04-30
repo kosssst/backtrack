@@ -1,12 +1,18 @@
 'use client';
-import { UserProps } from '@/features/profile/types';
+import { UserProfileProps } from '@/features/profile/types';
 import { isNotEmpty, useForm } from '@mantine/form';
 import { Button, Stack, TextInput } from '@mantine/core';
 import { authClient } from '@/features/auth/auth-client';
-import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
+import {
+	showFailure,
+	showSuccess,
+} from '@/shared/notifications/app-notifications';
 
-export function UpdateNameForm({ user }: UserProps) {
+/**
+ * Renders the account name update form.
+ */
+export function UpdateNameForm({ user }: UserProfileProps) {
 	const router = useRouter();
 	const form = useForm({
 		mode: 'controlled',
@@ -22,32 +28,16 @@ export function UpdateNameForm({ user }: UserProps) {
 		await authClient.updateUser(form.getValues(), {
 			onSuccess: () => {
 				router.refresh();
-				notifications.show({
-					title: 'Success',
-					message: 'Name updated successfully',
-					color: 'green',
-				});
+				showSuccess('Name updated successfully');
 			},
 			onError: () => {
-				notifications.show({
-					title: 'Failure',
-					message: 'Name update failed',
-					color: 'red',
-				});
+				showFailure('Name update failed');
 			},
 		});
 	};
 
 	return (
-		<form
-			onSubmit={form.onSubmit(async () => {
-				if (!form.isValid()) {
-					form.validate();
-					return;
-				}
-				await handleSubmit();
-			})}
-		>
+		<form onSubmit={form.onSubmit(handleSubmit)}>
 			<Stack gap="md">
 				<TextInput
 					label="Name"

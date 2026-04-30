@@ -1,12 +1,8 @@
 import 'server-only';
 import { parseBase64Key32 } from '../parsers';
+import { createRuntimeEnvGetter } from '../cache';
 
-let cached: { ENCRYPTION_KEY: Buffer } | undefined;
-
-export function getCryptoEnv() {
-	if (cached) return cached;
-	cached = {
-		ENCRYPTION_KEY: parseBase64Key32('ENCRYPTION_KEY'),
-	};
-	return cached;
-}
+/** Runtime encryption configuration parsed from server environment variables. */
+export const getCryptoEnv = createRuntimeEnvGetter(() => ({
+	ENCRYPTION_KEY: parseBase64Key32('ENCRYPTION_KEY'),
+}));

@@ -1,12 +1,15 @@
 'use client';
 
-import { UserProps } from '@/features/profile/types';
+import { UserProfileProps } from '@/features/profile/types';
 import { Accordion, Grid } from '@mantine/core';
 import { UserCard } from '@/features/profile/components/UserCard';
 import { UpdateNameForm } from '@/features/profile/components/UpdateNameForm';
 import { UpdatePasswordForm } from '@/features/profile/components/UpdatePasswordForm';
 
-export function ProfilePageView({ user }: UserProps) {
+/**
+ * Renders profile information and account settings forms.
+ */
+export function ProfilePageView({ user }: UserProfileProps) {
 	return (
 		<Grid align="flex-start">
 			<Grid.Col span={{ base: 12, md: 4 }}>

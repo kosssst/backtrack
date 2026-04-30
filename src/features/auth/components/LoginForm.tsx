@@ -12,15 +12,22 @@ import {
 } from '@mantine/core';
 import { hasLength, isEmail, useForm } from '@mantine/form';
 import { authClient } from '@/features/auth/auth-client';
-import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import classes from '@/shared/styles/form.module.css';
-import { AuthFormProps } from '@/features/auth/types';
+import { AuthRedirectProps, SignInFormData } from '@/features/auth/types';
+import { showFailure } from '@/shared/notifications/app-notifications';
+import {
+	PASSWORD_MAX_LENGTH,
+	PASSWORD_MIN_LENGTH,
+} from '@/features/auth/constants';
 
-export function LoginForm({ redirectTo }: AuthFormProps) {
+/**
+ * Renders the public login form and redirects authenticated users after sign-in.
+ */
+export function LoginForm({ redirectTo }: AuthRedirectProps) {
 	const router = useRouter();
 
-	const form = useForm({
+	const form = useForm<SignInFormData>({
 		mode: 'controlled',
 		initialValues: {
 			email: '',
@@ -30,18 +37,20 @@ export function LoginForm({ redirectTo }: AuthFormProps) {
 
 		validate: {
 			email: isEmail('Invalid email'),
-			password: hasLength({ min: 8, max: 50 }, 'Invalid password length'),
+			password: hasLength(
+				{ min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH },
+				'Invalid password length',
+			),
 		},
 	});
 
 	const handleSubmit = async () => {
 		await authClient.signIn.email(form.getValues(), {
 			onError: () => {
-				notifications.show({
-					title: 'Authentication failed',
-					message: 'Either email or password are incorrect.',
-					color: 'red',
-				});
+				showFailure(
+					'Either email or password are incorrect.',
+					'Authentication failed',
+				);
 			},
 			onSuccess: () => {
 				router.replace(redirectTo);
@@ -59,15 +68,7 @@ export function LoginForm({ redirectTo }: AuthFormProps) {
 						Sign in to continue
 					</Text>
 				</div>
-				<form
-					onSubmit={form.onSubmit(async () => {
-						if (!form.isValid()) {
-							form.validate();
-							return;
-						}
-						await handleSubmit();
-					})}
-				>
+				<form onSubmit={form.onSubmit(handleSubmit)}>
 					<Stack gap="md">
 						<TextInput
 							label="Email"

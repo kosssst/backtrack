@@ -1,12 +1,11 @@
-import { getAuth } from '@/features/auth/server/auth';
 import { NextResponse } from 'next/server';
+import { getCurrentSession } from '@/features/auth/server/session';
 
+/**
+ * Requires an authenticated Better Auth session for API route handlers.
+ */
 export async function requireApiSession(request: Request) {
-	const auth = await getAuth();
-
-	const session = await auth.api.getSession({
-		headers: request.headers,
-	});
+	const session = await getCurrentSession(request.headers);
 
 	if (!session?.user) {
 		return {

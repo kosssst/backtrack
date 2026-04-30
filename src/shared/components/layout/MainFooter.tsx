@@ -1,6 +1,9 @@
 import { Anchor, Container, Group, Text } from '@mantine/core';
 import classes from './MainFooter.module.css';
 
+/**
+ * Renders the shared application footer.
+ */
 export function MainFooter() {
 	return (
 		<footer className={classes.footer}>

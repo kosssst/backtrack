@@ -13,15 +13,21 @@ import { useState } from 'react';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import classes from './Post.module.css';
 import { PostForm } from '@/features/posts/components/PostForm';
-import { notifications } from '@mantine/notifications';
-import { PostFormValues } from '@/features/posts/types';
+import { PostContent } from '@/features/posts/types';
 import { openConfirmModal } from '@mantine/modals';
 import { deletePost } from '@/features/posts/api/posts-client';
+import {
+	showFailure,
+	showSuccess,
+} from '@/shared/notifications/app-notifications';
 
+/**
+ * Renders a post card with inline edit and delete actions.
+ */
 export function Post(props: PostProps) {
 	const [isEditing, setEditing] = useState(false);
 
-	const handleSuccess = (values: PostFormValues) => {
+	const handleSuccess = (values: PostContent) => {
 		setEditing(false);
 		props.onUpdated({
 			_id: props._id,
@@ -31,19 +37,11 @@ export function Post(props: PostProps) {
 			createdAt: props.createdAt,
 			updatedAt: new Date().toISOString(),
 		});
-		notifications.show({
-			color: 'green',
-			title: 'Success',
-			message: 'Post updated successfully',
-		});
+		showSuccess('Post updated successfully');
 	};
 
 	const handleFailure = () => {
-		notifications.show({
-			color: 'red',
-			title: 'Failure',
-			message: 'Failed to update post',
-		});
+		showFailure('Failed to update post');
 	};
 
 	const handleDelete = () => {
@@ -67,17 +65,9 @@ export function Post(props: PostProps) {
 					await deletePost({ _id: props._id });
 					props.onDeleted(props._id);
 
-					notifications.show({
-						color: 'green',
-						title: 'Success',
-						message: 'Post deleted successfully',
-					});
+					showSuccess('Post deleted successfully');
 				} catch {
-					notifications.show({
-						color: 'red',
-						title: 'Failure',
-						message: 'Failed to delete post',
-					});
+					showFailure('Failed to delete post');
 				}
 			},
 		});

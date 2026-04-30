@@ -3,25 +3,34 @@ import { hasLength, useForm } from '@mantine/form';
 import classes from '@/shared/styles/form.module.css';
 import { createPost, updatePost } from '@/features/posts/api/posts-client';
 import { PostFormProps } from '@/features/posts/types';
+import {
+	POST_BODY_MAX_LENGTH,
+	POST_TITLE_MAX_LENGTH,
+} from '@/features/posts/constants';
+import { reportClientError } from '@/shared/logging/report-client-error';
 
+/**
+ * Renders the create/edit post form with shared validation rules.
+ */
 export function PostForm(props: PostFormProps) {
 	const isEdit = props.mode === 'edit';
 
 	const form = useForm({
 		mode: 'controlled',
-		initialValues: props.initialValues ?? {
+		initialValues: {
 			title: '',
 			body: '',
+			...props.initialValues,
 		},
 
 		validate: {
 			title: hasLength(
-				{ min: 1, max: 200 },
-				'Title should be between 1 and 200 characters long.',
+				{ min: 1, max: POST_TITLE_MAX_LENGTH },
+				`Title should be between 1 and ${POST_TITLE_MAX_LENGTH} characters long.`,
 			),
 			body: hasLength(
-				{ min: 1, max: 20_000 },
-				'Body should be between 1 and 20,000 characters long.',
+				{ min: 1, max: POST_BODY_MAX_LENGTH },
+				`Body should be between 1 and ${POST_BODY_MAX_LENGTH.toLocaleString()} characters long.`,
 			),
 		},
 	});
@@ -29,12 +38,12 @@ export function PostForm(props: PostFormProps) {
 	const handleSubmit = async () => {
 		try {
 			if (isEdit) {
-				await updatePost({ _id: props.postId!, ...form.values });
+				await updatePost({ _id: props.postId, ...form.values });
 			} else {
 				await createPost(form.values);
 			}
 		} catch (error) {
-			console.error(error);
+			reportClientError(error);
 			props.onFailure();
 			return;
 		}
@@ -48,15 +57,7 @@ export function PostForm(props: PostFormProps) {
 
 	return (
 		<Paper withBorder shadow="md" radius="lg" p="md" mb="md">
-			<form
-				onSubmit={form.onSubmit(async () => {
-					if (!form.isValid()) {
-						form.validate();
-						return;
-					}
-					await handleSubmit();
-				})}
-			>
+			<form onSubmit={form.onSubmit(handleSubmit)}>
 				<Stack gap="md">
 					<TextInput
 						label="Title"

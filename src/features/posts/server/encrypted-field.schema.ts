@@ -2,6 +2,9 @@ import { Schema } from 'mongoose';
 import { Binary } from 'bson';
 import { BsonBinaryLike } from '@/shared/security/types';
 
+/**
+ * Detects BSON Binary-like values returned by MongoDB driver variants.
+ */
 function isBsonBinaryLike(v: unknown): v is BsonBinaryLike {
 	if (typeof v !== 'object' || v === null) return false;
 
@@ -9,6 +12,9 @@ function isBsonBinaryLike(v: unknown): v is BsonBinaryLike {
 	return o._bsontype === 'Binary' && typeof o.value === 'function';
 }
 
+/**
+ * Normalizes hydrated binary values to Node buffers for crypto operations.
+ */
 function binaryToBuffer(v: unknown): unknown {
 	if (v == null) return v;
 	if (Buffer.isBuffer(v)) return v;
@@ -25,6 +31,7 @@ function binaryToBuffer(v: unknown): unknown {
 	return v;
 }
 
+/** Reusable schema for encrypted AES-GCM fields. */
 export const EncFieldSchema = new Schema(
 	{
 		v: { type: Number, required: true },

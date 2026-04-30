@@ -17,14 +17,20 @@ import {
 	matchesField,
 	useForm,
 } from '@mantine/form';
-import { SignUpFormData } from '@/features/auth/types';
+import { AuthRedirectProps, SignUpFormData } from '@/features/auth/types';
 import { authClient } from '@/features/auth/auth-client';
-import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import classes from '@/shared/styles/form.module.css';
-import { AuthFormProps } from '@/features/auth/types';
+import { showFailure } from '@/shared/notifications/app-notifications';
+import {
+	PASSWORD_MAX_LENGTH,
+	PASSWORD_MIN_LENGTH,
+} from '@/features/auth/constants';
 
-export function RegisterForm({ redirectTo }: AuthFormProps) {
+/**
+ * Renders the registration form and signs the user in after successful account creation.
+ */
+export function RegisterForm({ redirectTo }: AuthRedirectProps) {
 	const router = useRouter();
 
 	const form = useForm<SignUpFormData>({
@@ -38,7 +44,10 @@ export function RegisterForm({ redirectTo }: AuthFormProps) {
 		validate: {
 			name: isNotEmpty('Name cannot be empty'),
 			email: isEmail('Invalid email'),
-			password: hasLength({ min: 8, max: 50 }, 'Invalid password'),
+			password: hasLength(
+				{ min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH },
+				'Invalid password',
+			),
 			repeatPassword: matchesField('password', 'Passwords are not the same'),
 		},
 	});
@@ -48,11 +57,10 @@ export function RegisterForm({ redirectTo }: AuthFormProps) {
 
 		await authClient.signUp.email(dataToSend, {
 			onError: () => {
-				notifications.show({
-					title: 'Registration failed',
-					message: 'Please check your details and try again.',
-					color: 'red',
-				});
+				showFailure(
+					'Please check your details and try again.',
+					'Registration failed',
+				);
 			},
 			onSuccess: () => {
 				router.replace(redirectTo);
@@ -71,15 +79,7 @@ export function RegisterForm({ redirectTo }: AuthFormProps) {
 					</Text>
 				</div>
 
-				<form
-					onSubmit={form.onSubmit(async () => {
-						if (!form.isValid()) {
-							form.validate();
-							return;
-						}
-						await handleSubmit();
-					})}
-				>
+				<form onSubmit={form.onSubmit(handleSubmit)}>
 					<Stack gap="md">
 						<TextInput
 							label="Name"

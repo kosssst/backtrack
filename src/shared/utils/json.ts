@@ -1,3 +1,6 @@
+/**
+ * Parses a JSON request body while enforcing a byte limit.
+ */
 export async function readJsonWithLimit<T>(
 	req: Request,
 	maxBytes: number,
@@ -33,23 +36,19 @@ export async function readJsonWithLimit<T>(
 	const chunks: Uint8Array[] = [];
 	let totalBytes = 0;
 
-	try {
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			if (!value) continue;
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		if (!value) continue;
 
-			totalBytes += value.byteLength;
+		totalBytes += value.byteLength;
 
-			if (totalBytes > maxBytes) {
-				await reader.cancel('body too large');
-				throw new Error('Request body too large');
-			}
-
-			chunks.push(value);
+		if (totalBytes > maxBytes) {
+			await reader.cancel('body too large');
+			throw new Error('Request body too large');
 		}
-	} catch (error) {
-		throw error;
+
+		chunks.push(value);
 	}
 
 	try {

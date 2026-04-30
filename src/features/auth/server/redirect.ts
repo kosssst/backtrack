@@ -1,6 +1,9 @@
 const DEFAULT_REDIRECT_PATH = '/';
 const BLOCKED_REDIRECT_PATHS = new Set(['/login', '/register']);
 
+/**
+ * Returns a local redirect path or `/` when the input is unsafe.
+ */
 export function getSafeRedirectPath(value: string | null | undefined) {
 	// Only local paths are accepted so auth redirects cannot be used as open redirects.
 	if (!value) return DEFAULT_REDIRECT_PATH;
@@ -19,6 +22,9 @@ export function getSafeRedirectPath(value: string | null | undefined) {
 	}
 }
 
+/**
+ * Builds a login/register URL with a safe return target.
+ */
 export function buildAuthRedirect(
 	mode: 'login' | 'register',
 	returnTo: string | null | undefined,

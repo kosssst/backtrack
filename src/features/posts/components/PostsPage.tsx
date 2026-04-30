@@ -2,11 +2,17 @@
 
 import { Button, Container, Group } from '@mantine/core';
 import { DatePickerInput, DatesRangeValue } from '@mantine/dates';
-import { notifications } from '@mantine/notifications';
 import { useState } from 'react';
 import { PostForm } from '@/features/posts/components/PostForm';
 import { PostsList } from '@/features/posts/components/PostsList';
+import {
+	showFailure,
+	showSuccess,
+} from '@/shared/notifications/app-notifications';
 
+/**
+ * Coordinates post creation, date filtering, and timeline refresh state.
+ */
 export function PostsPage() {
 	const [reloadKey, setReloadKey] = useState(0);
 	const [dateRange, setDateRange] = useState<DatesRangeValue>([null, null]);
@@ -15,19 +21,11 @@ export function PostsPage() {
 	const handleCreated = () => {
 		setIsCreatePostFormVisible(false);
 		setReloadKey((k) => k + 1);
-		notifications.show({
-			color: 'green',
-			title: 'Success',
-			message: 'Post created successfully',
-		});
+		showSuccess('Post created successfully');
 	};
 
 	const handleFailed = () => {
-		notifications.show({
-			color: 'red',
-			title: 'Failure',
-			message: 'Failed to create post',
-		});
+		showFailure('Failed to create post');
 	};
 
 	return (
