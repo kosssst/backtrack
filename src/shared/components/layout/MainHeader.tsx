@@ -15,13 +15,13 @@ export function MainHeader({ user }: UserProfileProps) {
 		<header className={classes.header}>
 			<Container size="lg" className={classes.container}>
 				<div className={classes.inner}>
-					<Group>
+					<Group gap={0}>
 						<Link href="/" className={classes.logoLink}>
 							<Image
-								src="/full-logo.png"
+								src="/backtrack-full-logo-v5.svg"
 								alt="Backtrack"
 								className={classes.fullLogo}
-								h={40}
+								h={50}
 								w="auto"
 								fit="contain"
 							/>
