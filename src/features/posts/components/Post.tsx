@@ -86,7 +86,7 @@ export function Post(props: PostProps) {
 					onFailure={handleFailure}
 				/>
 			) : (
-				<Paper withBorder shadow="md" radius="lg" p="md">
+				<Paper withBorder shadow="sm" radius="md" p="sm">
 					<Stack gap="sm">
 						<Group justify="space-between">
 							<Title order={3}>{props.title}</Title>
