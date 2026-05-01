@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkDatabase } from '@/features/healthcheck/server/healthcheck.service';
+import { logger } from '@/shared/logging/logger';
 
 /**
  * Returns a readiness health response for critical server dependencies.
@@ -7,7 +8,13 @@ import { checkDatabase } from '@/features/healthcheck/server/healthcheck.service
 export async function GET() {
 	try {
 		await checkDatabase();
-	} catch {
+	} catch (error) {
+		logger.warn('Healthcheck failed', {
+			check: 'database',
+			error,
+			route: 'GET /api/healthcheck',
+			status: 503,
+		});
 		return NextResponse.json(
 			{
 				ok: false,

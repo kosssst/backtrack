@@ -10,8 +10,9 @@ export function register() {
 	validateRuntimeEnv();
 	const { NODE_ENV, LOG_LEVEL } = getLoggerEnv();
 	const { APP_ORIGIN } = getAuthEnv();
-	logger.info(
-		{ nodeEnv: NODE_ENV, logLevel: LOG_LEVEL, appOrigin: APP_ORIGIN },
-		'Server started',
-	);
+	logger.info('Server started', {
+		appOrigin: APP_ORIGIN,
+		logLevel: LOG_LEVEL,
+		nodeEnv: NODE_ENV,
+	});
 }

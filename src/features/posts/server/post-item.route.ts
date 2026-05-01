@@ -25,7 +25,12 @@ export async function PUT(
 
 	if (!payload.ok) {
 		if (payload.cause) {
-			logger.error(payload.cause);
+			logger.warn('Rejected post payload', {
+				error: payload.cause,
+				postId,
+				route: 'PUT /api/posts/[postId]',
+				status: 400,
+			});
 		}
 		return NextResponse.json({ message: payload.message }, { status: 400 });
 	}
@@ -41,7 +46,13 @@ export async function PUT(
 			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 		}
 	} catch (error) {
-		logger.error(error);
+		logger.error('Failed to update post', {
+			authorId: session.user.id,
+			error,
+			postId,
+			route: 'PUT /api/posts/[postId]',
+			status: 500,
+		});
 		return NextResponse.json(
 			{ message: 'Unable to update the post' },
 			{ status: 500 },
@@ -72,7 +83,13 @@ export async function DELETE(
 			return NextResponse.json({ message: 'Post not found' }, { status: 404 });
 		}
 	} catch (error) {
-		logger.error(error);
+		logger.error('Failed to delete post', {
+			authorId: session.user.id,
+			error,
+			postId,
+			route: 'DELETE /api/posts/[postId]',
+			status: 500,
+		});
 		return NextResponse.json(
 			{ message: 'Unable to delete post' },
 			{ status: 500 },
