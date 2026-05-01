@@ -58,6 +58,13 @@ vi.mock('@/features/posts/components/PostForm', () => ({
 
 import { Post } from '@/features/posts/components/Post';
 
+async function choosePostAction(actionName: 'Edit' | 'Delete') {
+	await userEvent.click(screen.getByRole('button', { name: 'Post actions' }));
+	await userEvent.click(
+		await screen.findByRole('menuitem', { name: actionName }),
+	);
+}
+
 describe('Post', () => {
 	beforeEach(() => {
 		postMocks.deletePost.mockReset();
@@ -102,7 +109,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		await userEvent.click(screen.getAllByRole('button')[0]);
+		await choosePostAction('Edit');
 		await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
 		await waitFor(() => {
@@ -131,7 +138,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		await userEvent.click(screen.getAllByRole('button')[0]);
+		await choosePostAction('Edit');
 		await userEvent.click(screen.getByRole('button', { name: 'Fail save' }));
 
 		expect(postMocks.notify).toHaveBeenCalledWith({
@@ -155,7 +162,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		await userEvent.click(screen.getAllByRole('button')[0]);
+		await choosePostAction('Edit');
 		await userEvent.click(screen.getByRole('button', { name: 'Cancel edit' }));
 
 		expect(
@@ -177,8 +184,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		const buttons = screen.getAllByRole('button');
-		await userEvent.click(buttons[1]);
+		await choosePostAction('Delete');
 
 		expect(postMocks.openConfirmModal).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -212,8 +218,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		const buttons = screen.getAllByRole('button');
-		await userEvent.click(buttons[1]);
+		await choosePostAction('Delete');
 
 		const modalOptions = postMocks.openConfirmModal.mock.calls[0][0];
 		await modalOptions.onConfirm();
@@ -246,8 +251,7 @@ describe('Post', () => {
 			/>,
 		);
 
-		const buttons = screen.getAllByRole('button');
-		await userEvent.click(buttons[1]);
+		await choosePostAction('Delete');
 
 		const modalOptions = postMocks.openConfirmModal.mock.calls[0][0];
 		await modalOptions.onConfirm();

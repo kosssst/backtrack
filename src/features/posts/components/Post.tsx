@@ -1,16 +1,17 @@
 import { PostProps } from '@/features/posts/types';
 import {
-	Paper,
-	Stack,
-	Title,
-	Text,
+	ActionIcon,
 	Divider,
 	Group,
-	ActionIcon,
+	Menu,
+	Paper,
+	Stack,
+	Text,
+	Title,
 } from '@mantine/core';
 import { formatPostDate } from '@/features/posts/utils/format-post-date';
 import { useState } from 'react';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconDotsVertical, IconEdit, IconTrash } from '@tabler/icons-react';
 import classes from './Post.module.css';
 import { PostForm } from '@/features/posts/components/PostForm';
 import { PostContent } from '@/features/posts/types';
@@ -85,30 +86,36 @@ export function Post(props: PostProps) {
 					onFailure={handleFailure}
 				/>
 			) : (
-				<Paper withBorder shadow="md" radius="lg" p="md">
+				<Paper withBorder shadow="sm" radius="md" p="sm">
 					<Stack gap="sm">
 						<Group justify="space-between">
 							<Title order={3}>{props.title}</Title>
-							<Group justify="flex-end">
-								<ActionIcon
-									variant="subtle"
-									color="gray"
-									aria-label="edit-button"
-									onClick={() => {
-										setEditing(true);
-									}}
-								>
-									<IconEdit className={classes.editButton} size={20} />
-								</ActionIcon>
-								<ActionIcon
-									variant="subtle"
-									color="gray"
-									aria-label="delete-button"
-									onClick={handleDelete}
-								>
-									<IconTrash className={classes.deleteButton} size={20} />
-								</ActionIcon>
-							</Group>
+							<Menu shadow="md" width={100}>
+								<Menu.Target>
+									<ActionIcon
+										variant="subtle"
+										color="gray"
+										aria-label="Post actions"
+									>
+										<IconDotsVertical size={20} />
+									</ActionIcon>
+								</Menu.Target>
+								<Menu.Dropdown>
+									<Menu.Item
+										leftSection={<IconEdit size={14} />}
+										onClick={() => setEditing(true)}
+									>
+										Edit
+									</Menu.Item>
+									<Menu.Item
+										leftSection={<IconTrash size={14} />}
+										onClick={handleDelete}
+										className={classes.deleteButton}
+									>
+										Delete
+									</Menu.Item>
+								</Menu.Dropdown>
+							</Menu>
 						</Group>
 						<Divider />
 						<Text style={{ whiteSpace: 'pre-wrap' }} mt="sm">

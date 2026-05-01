@@ -9,6 +9,7 @@ import {
 	showFailure,
 	showSuccess,
 } from '@/shared/notifications/app-notifications';
+import { IconPlusFilled } from '@tabler/icons-react';
 
 /**
  * Coordinates post creation, date filtering, and timeline refresh state.
@@ -35,8 +36,9 @@ export function PostsPage() {
 					onClick={() => {
 						setIsCreatePostFormVisible(true);
 					}}
+					leftSection={<IconPlusFilled size={20} />}
 				>
-					Create post
+					New post
 				</Button>
 				<DatePickerInput
 					style={{ flex: 1, maxWidth: 220 }}

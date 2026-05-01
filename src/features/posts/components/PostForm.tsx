@@ -56,7 +56,7 @@ export function PostForm(props: PostFormProps) {
 	};
 
 	return (
-		<Paper withBorder shadow="md" radius="lg" p="md" mb="md">
+		<Paper withBorder shadow="sm" radius="md" p="sm" mb="md">
 			<form onSubmit={form.onSubmit(handleSubmit)}>
 				<Stack gap="md">
 					<TextInput
@@ -76,7 +76,6 @@ export function PostForm(props: PostFormProps) {
 						{...form.getInputProps('body')}
 						autosize
 						minRows={4}
-						maxRows={20}
 					/>
 					<div className={classes.actions}>
 						<Button
