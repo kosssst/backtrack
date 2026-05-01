@@ -1,4 +1,7 @@
-# Backtrack
+<h1>
+  <img src="public/backtrack-icon.svg" alt="Backtrack logo" width="32" height="32">
+  Backtrack
+</h1>
 
 <p align="center">
   <strong>Secure, private activity logging for people who want to remember what they did and when they did it.</strong>
