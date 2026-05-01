@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readPostPayload } from '@/features/posts/server/post-request';
+import { readPostPayload } from '@/features/posts/server/post.service';
 import {
 	POST_BODY_MAX_LENGTH,
 	POST_TITLE_MAX_LENGTH,

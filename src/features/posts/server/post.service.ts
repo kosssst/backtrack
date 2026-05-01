@@ -3,8 +3,18 @@ import 'server-only';
 import { connectMongoose } from '@/shared/database/mongoose';
 import { Posts } from '@/features/posts/server/post.model';
 import { decrypt, encrypt } from '@/shared/security/encryption/aes-256-gcm';
-import { AES256GCMEncryptedData } from '@/shared/security/types';
-import { PostContent } from '@/features/posts/types';
+import { toIntParam } from '@/shared/utils/misc';
+import { readJsonWithLimit } from '@/shared/utils/json';
+import type { AES256GCMEncryptedData } from '@/shared/security/types';
+import type { PostContent, PostPayloadResult } from '@/features/posts/types';
+import {
+	POST_BODY_MAX_LENGTH,
+	POST_REQUEST_MAX_BYTES,
+	POST_TITLE_MAX_LENGTH,
+	POSTS_DEFAULT_PAGE,
+	POSTS_DEFAULT_PAGE_LIMIT,
+	POSTS_MAX_PAGE_LIMIT,
+} from '@/features/posts/constants';
 
 type AuthorPostsFilter = {
 	authorId: string;
@@ -145,4 +155,74 @@ export async function listPostsForAuthor(input: {
 		total,
 		limit,
 	};
+}
+
+/**
+ * Parses list pagination query parameters and clamps them to API limits.
+ */
+export function parsePostsPagination(searchParams: URLSearchParams) {
+	const limit = Math.min(
+		Math.max(
+			toIntParam(searchParams.get('limit'), POSTS_DEFAULT_PAGE_LIMIT),
+			1,
+		),
+		POSTS_MAX_PAGE_LIMIT,
+	);
+	const page = Math.max(
+		toIntParam(searchParams.get('page'), POSTS_DEFAULT_PAGE),
+		POSTS_DEFAULT_PAGE,
+	);
+
+	return { page, limit };
+}
+
+function normalizePostPayload(data: unknown): PostPayloadResult {
+	const source = data as Partial<Record<keyof PostContent, unknown>> | null;
+	const title = (source?.title ?? '').toString().trim();
+	const body = (source?.body ?? '').toString().trim();
+
+	if (!title) {
+		return { ok: false, message: 'Invalid title' };
+	}
+
+	if (title.length > POST_TITLE_MAX_LENGTH) {
+		return { ok: false, message: 'Invalid title' };
+	}
+
+	if (!body) {
+		return { ok: false, message: 'Invalid content' };
+	}
+
+	if (body.length > POST_BODY_MAX_LENGTH) {
+		return { ok: false, message: 'Invalid content' };
+	}
+
+	return {
+		ok: true,
+		value: { title, body },
+	};
+}
+
+/**
+ * Reads and validates the request body used by create/update post endpoints.
+ *
+ * The result shape lets route handlers return client-safe messages while still
+ * logging low-level JSON/body errors through the server logger.
+ */
+export async function readPostPayload(
+	request: Request,
+): Promise<PostPayloadResult> {
+	try {
+		const data = await readJsonWithLimit<unknown>(
+			request,
+			POST_REQUEST_MAX_BYTES,
+		);
+		return normalizePostPayload(data);
+	} catch (error) {
+		return {
+			ok: false,
+			message: 'Invalid JSON',
+			cause: error,
+		};
+	}
 }

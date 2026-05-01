@@ -1,9 +1,9 @@
 import { requireApiSession } from '@/features/auth/server/require-api-session';
 import { logger } from '@/shared/logging/logger';
 import { NextResponse } from 'next/server';
-import { readPostPayload } from '@/features/posts/server/post-request';
 import {
 	deletePostForAuthor,
+	readPostPayload,
 	updatePostForAuthor,
 } from '@/features/posts/server/post.service';
 

@@ -5,12 +5,12 @@ import {
 } from '@/features/posts/utils/format-post-date';
 import { requireApiSession } from '@/features/auth/server/require-api-session';
 import { logger } from '@/shared/logging/logger';
-import { readPostPayload } from '@/features/posts/server/post-request';
 import {
 	createPostForAuthor,
 	listPostsForAuthor,
+	parsePostsPagination,
+	readPostPayload,
 } from '@/features/posts/server/post.service';
-import { parsePostsPagination } from '@/features/posts/server/post-pagination';
 
 /**
  * Creates an encrypted post for the authenticated user.

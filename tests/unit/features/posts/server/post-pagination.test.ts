@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePostsPagination } from '@/features/posts/server/post-pagination';
+import { parsePostsPagination } from '@/features/posts/server/post.service';
 
 describe('parsePostsPagination', () => {
 	it('uses defaults when pagination params are absent', () => {
