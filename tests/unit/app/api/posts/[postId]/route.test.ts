@@ -5,6 +5,7 @@ const routeMocks = vi.hoisted(() => ({
 	connectMongoose: vi.fn(),
 	readJsonWithLimit: vi.fn(),
 	loggerError: vi.fn(),
+	loggerWarn: vi.fn(),
 	encrypt: vi.fn(),
 	updateOne: vi.fn(),
 	deleteOne: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock('@/shared/utils/json', () => ({
 vi.mock('@/shared/logging/logger', () => ({
 	logger: {
 		error: routeMocks.loggerError,
+		warn: routeMocks.loggerWarn,
 	},
 }));
 
@@ -63,6 +65,7 @@ describe('posts/[postId] route', () => {
 		routeMocks.connectMongoose.mockReset();
 		routeMocks.readJsonWithLimit.mockReset();
 		routeMocks.loggerError.mockReset();
+		routeMocks.loggerWarn.mockReset();
 		routeMocks.encrypt.mockReset();
 		routeMocks.updateOne.mockReset();
 		routeMocks.deleteOne.mockReset();
@@ -113,7 +116,15 @@ describe('posts/[postId] route', () => {
 				request,
 				32 * 1024,
 			);
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(readerError);
+			expect(routeMocks.loggerWarn).toHaveBeenCalledWith(
+				'Rejected post payload',
+				{
+					error: readerError,
+					postId: 'post-1',
+					route: 'PUT /api/posts/[postId]',
+					status: 400,
+				},
+			);
 			expect(routeMocks.encrypt).not.toHaveBeenCalled();
 			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 			expect(routeMocks.updateOne).not.toHaveBeenCalled();
@@ -375,7 +386,16 @@ describe('posts/[postId] route', () => {
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.updateOne).toHaveBeenCalledTimes(1);
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(updateError);
+			expect(routeMocks.loggerError).toHaveBeenCalledWith(
+				'Failed to update post',
+				{
+					authorId: 'user-1',
+					error: updateError,
+					postId: 'post-1',
+					route: 'PUT /api/posts/[postId]',
+					status: 500,
+				},
+			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
 				message: 'Unable to update the post',
@@ -471,7 +491,16 @@ describe('posts/[postId] route', () => {
 				_id: 'post-1',
 				authorId: 'user-1',
 			});
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(deleteError);
+			expect(routeMocks.loggerError).toHaveBeenCalledWith(
+				'Failed to delete post',
+				{
+					authorId: 'user-1',
+					error: deleteError,
+					postId: 'post-1',
+					route: 'DELETE /api/posts/[postId]',
+					status: 500,
+				},
+			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
 				message: 'Unable to delete post',

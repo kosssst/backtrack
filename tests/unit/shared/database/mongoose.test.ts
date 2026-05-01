@@ -49,7 +49,9 @@ describe('connectMongoose', () => {
 			'mongodb://localhost:27017/backtrack',
 			{ dbName: 'backtrack' },
 		);
-		expect(mongooseMocks.debug).toHaveBeenCalledWith('Mongoose connected');
+		expect(mongooseMocks.debug).toHaveBeenCalledWith('Mongoose connected', {
+			database: 'backtrack',
+		});
 	});
 
 	it('reuses the pending connection promise for concurrent calls', async () => {

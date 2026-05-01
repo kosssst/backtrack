@@ -32,7 +32,7 @@ export async function connectMongoose() {
 
 	try {
 		cache.conn = await cache.promise;
-		logger.debug('Mongoose connected');
+		logger.debug('Mongoose connected', { database: 'backtrack' });
 		return cache.conn;
 	} catch (err) {
 		cache.promise = null;

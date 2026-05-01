@@ -1,4 +1,7 @@
-# Backtrack
+<h1>
+  <img src="public/backtrack-icon.svg" alt="Backtrack logo" width="32" height="32">
+  Backtrack
+</h1>
 
 <p align="center">
   <strong>Secure, private activity logging for people who want to remember what they did and when they did it.</strong>
@@ -17,6 +20,7 @@
 - [Overview](#overview)
 - [Security notes](#security-notes)
 - [Getting started](#getting-started)
+  - [Environment variables](#environment-variables)
   - [Option 1: Run with Docker](#option-1-run-with-docker)
   - [Option 2: Run locally](#option-2-run-locally)
     - [Prerequisites](#prerequisites)
@@ -58,6 +62,36 @@ The server holds the runtime encryption key and decrypts stored content in order
 
 ## Getting started
 
+### Environment variables
+
+Backtrack uses the same environment variable names for Docker, Compose, and local runs.
+
+Required server variables:
+
+| Variable | Example | Description |
+| --- | --- | --- |
+| `APP_ORIGIN` | `https://backtrack.example.com` | Public URL where users open the app. Use `http://localhost:3000` for local runs. |
+| `MONGODB_URL` | `mongodb://db:27017/backtrack` | MongoDB connection string. Use the Compose service host `db` inside Compose, or `127.0.0.1` for a local MongoDB process. |
+| `ENCRYPTION_KEY` | `REPLACE_WITH_BASE64_32_BYTE_KEY` | Strict base64 key that decodes to exactly 32 bytes. Keep it stable; changing it prevents old posts from being decrypted. |
+| `BETTER_AUTH_SECRET` | `REPLACE_WITH_LONG_RANDOM_SECRET` | Long random secret used by Better Auth for signing auth data. Changing it invalidates existing sessions. |
+
+Optional variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `LOG_LEVEL` | `info` in production, `debug` otherwise | One of `debug`, `info`, `warn`, or `error`. |
+| `DEBUG` | `false` | Optional boolean flag for server-side debug behavior. |
+| `NEXT_PUBLIC_APP_VERSION` | `0.0.0` | Version label shown by the app. |
+
+Generate values before deploying:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
+
+Use the first output for `ENCRYPTION_KEY` and the second output for `BETTER_AUTH_SECRET`.
+
 ### Option 1: Run with Docker
 
 Run the container:
@@ -65,9 +99,10 @@ Run the container:
 ```bash
 docker run --rm -p 3000:3000 \
   -e APP_ORIGIN=http://localhost:3000 \
-  -e MONGODB_URL=mongodb://link-to-mongodb/backtrack \
-  -e ENCRYPTION_KEY=YOUR_BASE64_32_BYTE_KEY \
-  -e BETTER_AUTH_SECRET=SECRET_KEY
+  -e MONGODB_URL=mongodb://host.docker.internal:27017/backtrack \
+  -e ENCRYPTION_KEY=REPLACE_WITH_BASE64_32_BYTE_KEY \
+  -e BETTER_AUTH_SECRET=REPLACE_WITH_LONG_RANDOM_SECRET \
+  -e LOG_LEVEL=info \
   kosssst/backtrack:latest
 ```
 
@@ -82,14 +117,36 @@ services:
     environment:
       APP_ORIGIN: http://localhost:3000
       MONGODB_URL: mongodb://db:27017/backtrack
-      ENCRYPTION_KEY: YOUR_BASE64_32_BYTE_KEY
-      BETTER_AUTH_SECRET: SECRET_KEY
+      ENCRYPTION_KEY: REPLACE_WITH_BASE64_32_BYTE_KEY
+      BETTER_AUTH_SECRET: REPLACE_WITH_LONG_RANDOM_SECRET
+      LOG_LEVEL: info
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/api/healthcheck').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     networks:
       - app_net
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   db:
     image: mongo:8.2
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval \"db.adminCommand({ ping: 1 })\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - mongo_data:/data/db
     networks:
@@ -131,22 +188,22 @@ Install dependencies:
 npm install
 ```
 
-Create .env.local in the project root:
+Create `.env.local` in the project root:
 
 ```dotenv
 APP_ORIGIN=http://localhost:3000
 MONGODB_URL=mongodb://127.0.0.1:27017/backtrack
-ENCRYPTION_KEY=REPLACE_WITH_A_BASE64_32_BYTE_KEY
-BETTER_AUTH_SECRET=SECRET_KEY
+ENCRYPTION_KEY=REPLACE_WITH_BASE64_32_BYTE_KEY
+BETTER_AUTH_SECRET=REPLACE_WITH_LONG_RANDOM_SECRET
+LOG_LEVEL=debug
+DEBUG=true
 ```
 
-Generate a valid encryption key
+You can also start from the committed example file:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+cp .env.example .env.local
 ```
-
-Paste the output into `ENCRYPTION_KEY`.
 
 Build and start
 

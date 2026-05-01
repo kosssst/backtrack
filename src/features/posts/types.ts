@@ -55,3 +55,14 @@ export type PostsListProps = {
 	reloadKey?: number;
 	dateRange?: DatesRangeValue;
 };
+
+export type PostPayloadResult =
+	| {
+			ok: true;
+			value: PostContent;
+	  }
+	| {
+			ok: false;
+			message: string;
+			cause?: unknown;
+	  };
