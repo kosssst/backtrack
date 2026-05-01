@@ -76,7 +76,6 @@ export function PostForm(props: PostFormProps) {
 						{...form.getInputProps('body')}
 						autosize
 						minRows={4}
-						maxRows={20}
 					/>
 					<div className={classes.actions}>
 						<Button
