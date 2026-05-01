@@ -84,12 +84,33 @@ services:
       MONGODB_URL: mongodb://db:27017/backtrack
       ENCRYPTION_KEY: YOUR_BASE64_32_BYTE_KEY
       BETTER_AUTH_SECRET: SECRET_KEY
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000/api/healthcheck').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     networks:
       - app_net
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   db:
     image: mongo:8.2
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval \"db.adminCommand({ ping: 1 })\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
       - mongo_data:/data/db
     networks:
