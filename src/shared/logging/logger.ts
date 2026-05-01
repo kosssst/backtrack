@@ -1,26 +1,13 @@
 import 'server-only';
 import pino from 'pino';
+import { getLoggerEnv } from '@/shared/config/env/runtime/logger-env';
 
-const nodeEnv = process.env.NODE_ENV ?? 'production';
-const isProd = nodeEnv === 'production';
-
-const logLevel = (() => {
-	const value = process.env.LOG_LEVEL;
-
-	switch (value) {
-		case 'debug':
-		case 'info':
-		case 'warn':
-		case 'error':
-			return value;
-		default:
-			return isProd ? 'info' : 'debug';
-	}
-})();
+const { NODE_ENV, LOG_LEVEL } = getLoggerEnv();
+const isProd = NODE_ENV === 'production';
 
 /** Server logger with redaction for common credential fields. */
 export const logger = pino({
-	level: logLevel,
+	level: LOG_LEVEL,
 
 	// Keep common credential fields out of logs even when errors include request context.
 	redact: {

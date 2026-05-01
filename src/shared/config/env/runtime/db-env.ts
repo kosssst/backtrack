@@ -1,8 +1,11 @@
 import 'server-only';
-import { parseMongoUrl } from '../parsers';
-import { createRuntimeEnvGetter } from '../cache';
+import { getServerEnv } from './server-env';
 
 /** Runtime database configuration parsed from server environment variables. */
-export const getDbEnv = createRuntimeEnvGetter(() => ({
-	MONGODB_URL: parseMongoUrl('MONGODB_URL'),
-}));
+export function getDbEnv() {
+	const { MONGODB_URL } = getServerEnv();
+
+	return {
+		MONGODB_URL,
+	};
+}
