@@ -10,22 +10,23 @@ const routeMocks = vi.hoisted(() => ({
 	find: vi.fn(),
 	readJsonWithLimit: vi.fn(),
 	loggerError: vi.fn(),
+	loggerWarn: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/require-api-session', () => ({
+vi.mock('@/features/auth/server/require-api-session', () => ({
 	requireApiSession: routeMocks.requireApiSession,
 }));
 
-vi.mock('@/lib/db/mongoose', () => ({
+vi.mock('@/shared/database/mongoose', () => ({
 	connectMongoose: routeMocks.connectMongoose,
 }));
 
-vi.mock('@/lib/encryption/aes-265-gcm', () => ({
+vi.mock('@/shared/security/encryption/aes-256-gcm', () => ({
 	encrypt: routeMocks.encrypt,
 	decrypt: routeMocks.decrypt,
 }));
 
-vi.mock('@/models/posts.model', () => ({
+vi.mock('@/features/posts/server/post.model', () => ({
 	Posts: {
 		countDocuments: routeMocks.countDocuments,
 		create: routeMocks.create,
@@ -33,13 +34,14 @@ vi.mock('@/models/posts.model', () => ({
 	},
 }));
 
-vi.mock('@/lib/utils/json', () => ({
+vi.mock('@/shared/utils/json', () => ({
 	readJsonWithLimit: routeMocks.readJsonWithLimit,
 }));
 
-vi.mock('@/lib/logger', () => ({
+vi.mock('@/shared/logging/logger', () => ({
 	logger: {
 		error: routeMocks.loggerError,
+		warn: routeMocks.loggerWarn,
 	},
 }));
 
@@ -74,6 +76,7 @@ describe('posts route', () => {
 		routeMocks.find.mockReset();
 		routeMocks.readJsonWithLimit.mockReset();
 		routeMocks.loggerError.mockReset();
+		routeMocks.loggerWarn.mockReset();
 	});
 
 	it('uses the node runtime', () => {
@@ -117,7 +120,14 @@ describe('posts route', () => {
 			request,
 			32 * 1024,
 		);
-		expect(routeMocks.loggerError).toHaveBeenCalledWith(readerError);
+		expect(routeMocks.loggerWarn).toHaveBeenCalledWith(
+			'Rejected post payload',
+			{
+				error: readerError,
+				route: 'POST /api/posts',
+				status: 400,
+			},
+		);
 		expect(routeMocks.encrypt).not.toHaveBeenCalled();
 		expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 		expect(routeMocks.create).not.toHaveBeenCalled();
@@ -215,6 +225,56 @@ describe('posts route', () => {
 		expect(await response.json()).toEqual({ _id: 'post-1' });
 	});
 
+	it('returns 500 and logs when creating a post fails', async () => {
+		routeMocks.requireApiSession.mockResolvedValue({
+			session: { user: { id: 'user-1' } },
+			errorResponse: null,
+		});
+
+		routeMocks.readJsonWithLimit.mockResolvedValue({
+			title: 'My title',
+			body: 'My body',
+		});
+
+		routeMocks.encrypt
+			.mockResolvedValueOnce({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv1'),
+				ct: Buffer.from('ct1'),
+				tag: Buffer.from('tag1'),
+			})
+			.mockResolvedValueOnce({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv2'),
+				ct: Buffer.from('ct2'),
+				tag: Buffer.from('tag2'),
+			});
+
+		const createError = new Error('Mongo create failed');
+		routeMocks.create.mockRejectedValue(createError);
+
+		const response = await POST(
+			jsonRequest('http://localhost/api/posts', {
+				title: 'My title',
+				body: 'My body',
+			}),
+		);
+
+		expect(routeMocks.loggerError).toHaveBeenCalledWith(
+			'Failed to create post',
+			{
+				authorId: 'user-1',
+				error: createError,
+				route: 'POST /api/posts',
+				status: 500,
+			},
+		);
+		expect(response.status).toBe(500);
+		expect(await response.json()).toEqual({
+			message: 'Unable to create a post',
+		});
+	});
+
 	it('returns the auth error response when GET is unauthorized', async () => {
 		routeMocks.requireApiSession.mockResolvedValue({
 			session: null,
@@ -244,6 +304,33 @@ describe('posts route', () => {
 
 		expect(response.status).toBe(400);
 		expect(await response.json()).toEqual({ message: 'invalid page' });
+	});
+
+	it('returns 500 and logs when listing posts fails', async () => {
+		routeMocks.requireApiSession.mockResolvedValue({
+			session: { user: { id: 'user-1' } },
+			errorResponse: null,
+		});
+
+		const listError = new Error('Mongo count failed');
+		routeMocks.connectMongoose.mockResolvedValue(undefined);
+		routeMocks.countDocuments.mockRejectedValue(listError);
+
+		const response = await GET(new Request('http://localhost/api/posts'));
+
+		expect(routeMocks.loggerError).toHaveBeenCalledWith(
+			'Failed to list posts',
+			{
+				authorId: 'user-1',
+				error: listError,
+				route: 'GET /api/posts',
+				status: 500,
+			},
+		);
+		expect(response.status).toBe(500);
+		expect(await response.json()).toEqual({
+			message: 'Unable to list posts',
+		});
 	});
 
 	it('returns decrypted posts on valid GET with date filtering', async () => {

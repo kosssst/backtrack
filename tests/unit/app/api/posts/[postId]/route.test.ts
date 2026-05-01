@@ -5,34 +5,36 @@ const routeMocks = vi.hoisted(() => ({
 	connectMongoose: vi.fn(),
 	readJsonWithLimit: vi.fn(),
 	loggerError: vi.fn(),
+	loggerWarn: vi.fn(),
 	encrypt: vi.fn(),
 	updateOne: vi.fn(),
 	deleteOne: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/require-api-session', () => ({
+vi.mock('@/features/auth/server/require-api-session', () => ({
 	requireApiSession: routeMocks.requireApiSession,
 }));
 
-vi.mock('@/lib/db/mongoose', () => ({
+vi.mock('@/shared/database/mongoose', () => ({
 	connectMongoose: routeMocks.connectMongoose,
 }));
 
-vi.mock('@/lib/utils/json', () => ({
+vi.mock('@/shared/utils/json', () => ({
 	readJsonWithLimit: routeMocks.readJsonWithLimit,
 }));
 
-vi.mock('@/lib/logger', () => ({
+vi.mock('@/shared/logging/logger', () => ({
 	logger: {
 		error: routeMocks.loggerError,
+		warn: routeMocks.loggerWarn,
 	},
 }));
 
-vi.mock('@/lib/encryption/aes-265-gcm', () => ({
+vi.mock('@/shared/security/encryption/aes-256-gcm', () => ({
 	encrypt: routeMocks.encrypt,
 }));
 
-vi.mock('@/models/posts.model', () => ({
+vi.mock('@/features/posts/server/post.model', () => ({
 	Posts: {
 		updateOne: routeMocks.updateOne,
 		deleteOne: routeMocks.deleteOne,
@@ -63,6 +65,7 @@ describe('posts/[postId] route', () => {
 		routeMocks.connectMongoose.mockReset();
 		routeMocks.readJsonWithLimit.mockReset();
 		routeMocks.loggerError.mockReset();
+		routeMocks.loggerWarn.mockReset();
 		routeMocks.encrypt.mockReset();
 		routeMocks.updateOne.mockReset();
 		routeMocks.deleteOne.mockReset();
@@ -113,7 +116,15 @@ describe('posts/[postId] route', () => {
 				request,
 				32 * 1024,
 			);
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(readerError);
+			expect(routeMocks.loggerWarn).toHaveBeenCalledWith(
+				'Rejected post payload',
+				{
+					error: readerError,
+					postId: 'post-1',
+					route: 'PUT /api/posts/[postId]',
+					status: 400,
+				},
+			);
 			expect(routeMocks.encrypt).not.toHaveBeenCalled();
 			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 			expect(routeMocks.updateOne).not.toHaveBeenCalled();
@@ -296,6 +307,47 @@ describe('posts/[postId] route', () => {
 			expect(await response.json()).toEqual({ _id: 'post-1' });
 		});
 
+		it('returns 404 when the post to update is not found', async () => {
+			routeMocks.requireApiSession.mockResolvedValue({
+				session: { user: { id: 'user-1' } },
+				errorResponse: null,
+			});
+
+			routeMocks.readJsonWithLimit.mockResolvedValue({
+				title: 'Updated title',
+				body: 'Updated body',
+			});
+
+			routeMocks.encrypt
+				.mockResolvedValueOnce({
+					alg: 'aes-256-gcm',
+					iv: Buffer.from('iv1'),
+					ct: Buffer.from('ct1'),
+					tag: Buffer.from('tag1'),
+				})
+				.mockResolvedValueOnce({
+					alg: 'aes-256-gcm',
+					iv: Buffer.from('iv2'),
+					ct: Buffer.from('ct2'),
+					tag: Buffer.from('tag2'),
+				});
+			routeMocks.updateOne.mockResolvedValue({
+				matchedCount: 0,
+				modifiedCount: 0,
+			});
+
+			const response = await PUT(
+				jsonRequest('http://localhost/api/posts/post-1', {
+					title: 'Updated title',
+					body: 'Updated body',
+				}),
+				params(),
+			);
+
+			expect(response.status).toBe(404);
+			expect(await response.json()).toEqual({ message: 'Post not found' });
+		});
+
 		it('returns 500 and logs when updateOne throws', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
@@ -334,7 +386,16 @@ describe('posts/[postId] route', () => {
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.updateOne).toHaveBeenCalledTimes(1);
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(updateError);
+			expect(routeMocks.loggerError).toHaveBeenCalledWith(
+				'Failed to update post',
+				{
+					authorId: 'user-1',
+					error: updateError,
+					postId: 'post-1',
+					route: 'PUT /api/posts/[postId]',
+					status: 500,
+				},
+			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
 				message: 'Unable to update the post',
@@ -389,6 +450,26 @@ describe('posts/[postId] route', () => {
 			expect(await response.json()).toEqual({ _id: 'post-1' });
 		});
 
+		it('returns 404 when the post to delete is not found', async () => {
+			routeMocks.requireApiSession.mockResolvedValue({
+				session: { user: { id: 'user-1' } },
+				errorResponse: null,
+			});
+
+			routeMocks.connectMongoose.mockResolvedValue(undefined);
+			routeMocks.deleteOne.mockResolvedValue({ deletedCount: 0 });
+
+			const response = await DELETE(
+				new Request('http://localhost/api/posts/post-1', {
+					method: 'DELETE',
+				}),
+				params('post-1'),
+			);
+
+			expect(response.status).toBe(404);
+			expect(await response.json()).toEqual({ message: 'Post not found' });
+		});
+
 		it('returns 500 and logs when deleteOne throws', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
@@ -410,7 +491,16 @@ describe('posts/[postId] route', () => {
 				_id: 'post-1',
 				authorId: 'user-1',
 			});
-			expect(routeMocks.loggerError).toHaveBeenCalledWith(deleteError);
+			expect(routeMocks.loggerError).toHaveBeenCalledWith(
+				'Failed to delete post',
+				{
+					authorId: 'user-1',
+					error: deleteError,
+					postId: 'post-1',
+					route: 'DELETE /api/posts/[postId]',
+					status: 500,
+				},
+			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
 				message: 'Unable to delete post',

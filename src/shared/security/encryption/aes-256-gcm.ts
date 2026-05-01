@@ -1,0 +1,55 @@
+import crypto from 'crypto';
+import { AES256GCMEncryptedData } from '@/shared/security/types';
+import { getCryptoEnv } from '@/shared/config/env/runtime/crypto-env';
+
+function makeAAD(userId: string) {
+	// Binding the user id as AAD makes ciphertext fail authentication if it is attached to another user.
+	return Buffer.from(`user:${userId}`, 'utf8');
+}
+
+/**
+ * Encrypts plaintext for a specific user with AES-256-GCM.
+ */
+export async function encrypt(plaintext: string, userId: string) {
+	const { ENCRYPTION_KEY } = getCryptoEnv();
+	const iv = crypto.randomBytes(12);
+
+	const cipher = crypto.createCipheriv('aes-256-gcm', ENCRYPTION_KEY, iv);
+	cipher.setAAD(makeAAD(userId));
+
+	const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+	const tag = cipher.getAuthTag();
+
+	return {
+		alg: 'aes-256-gcm',
+		iv,
+		ct,
+		tag,
+	} as AES256GCMEncryptedData;
+}
+
+/**
+ * Decrypts AES-256-GCM data that was encrypted for the same user id.
+ */
+export async function decrypt(
+	encryptedData: AES256GCMEncryptedData,
+	userId: string,
+) {
+	const { ENCRYPTION_KEY } = getCryptoEnv();
+	if (encryptedData.alg !== 'aes-256-gcm')
+		throw new Error(`Unsupported alg: ${encryptedData.alg}`);
+
+	const decipher = crypto.createDecipheriv(
+		'aes-256-gcm',
+		ENCRYPTION_KEY,
+		encryptedData.iv,
+	);
+	decipher.setAAD(makeAAD(userId));
+	decipher.setAuthTag(encryptedData.tag);
+
+	const pt = Buffer.concat([
+		decipher.update(encryptedData.ct),
+		decipher.final(),
+	]);
+	return pt.toString('utf8');
+}

@@ -1,8 +1,4 @@
+/** Healthcheck runs in Node.js to match the deployed server runtime. */
 export const runtime = 'nodejs';
 
-export async function GET() {
-	return Response.json({
-		ok: true,
-		ts: Date.now(),
-	});
-}
+export { GET } from '@/features/healthcheck/server/healthcheck.route';
