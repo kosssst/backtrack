@@ -15,11 +15,7 @@ import {
 	POSTS_DEFAULT_PAGE_LIMIT,
 	POSTS_MAX_PAGE_LIMIT,
 } from '@/features/posts/constants';
-
-type AuthorPostsFilter = {
-	authorId: string;
-	createdAt?: { $gte: string; $lte: string };
-};
+import { AuthorPostsFilter } from '@/shared/database/types';
 
 function buildAuthorPostsFilter(
 	authorId: string,

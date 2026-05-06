@@ -5,3 +5,8 @@ export type MongooseCache = {
 	conn: typeof mongoose | null;
 	promise: Promise<typeof mongoose> | null;
 };
+
+export type AuthorPostsFilter = {
+	authorId: string;
+	createdAt?: { $gte: string; $lte: string };
+};
