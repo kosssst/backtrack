@@ -7,6 +7,7 @@ const routeMocks = vi.hoisted(() => ({
 	loggerError: vi.fn(),
 	loggerWarn: vi.fn(),
 	encrypt: vi.fn(),
+	decrypt: vi.fn(),
 	updateOne: vi.fn(),
 	deleteOne: vi.fn(),
 }));
@@ -32,19 +33,20 @@ vi.mock('@/shared/logging/logger', () => ({
 
 vi.mock('@/shared/security/encryption/aes-256-gcm', () => ({
 	encrypt: routeMocks.encrypt,
+	decrypt: routeMocks.decrypt,
 }));
 
-vi.mock('@/features/posts/server/post.model', () => ({
-	Posts: {
+vi.mock('@/features/tags/server/tag.model', () => ({
+	Tags: {
 		updateOne: routeMocks.updateOne,
 		deleteOne: routeMocks.deleteOne,
 	},
 }));
 
-import { DELETE, PUT } from '@/app/api/posts/[postId]/route';
+import { DELETE, PUT, runtime } from '@/app/api/tags/[tagId]/route';
 
-const VALID_POST_ID = '507f1f77bcf86cd799439011';
-const INVALID_POST_ID = 'not-an-id';
+const VALID_TAG_ID = '507f1f77bcf86cd799439011';
+const INVALID_TAG_ID = 'not-an-id';
 
 function jsonRequest(url: string, body: unknown, method = 'PUT') {
 	return new Request(url, {
@@ -56,13 +58,13 @@ function jsonRequest(url: string, body: unknown, method = 'PUT') {
 	});
 }
 
-function params(postId = VALID_POST_ID) {
+function params(tagId = VALID_TAG_ID) {
 	return {
-		params: Promise.resolve({ postId }),
+		params: Promise.resolve({ tagId }),
 	};
 }
 
-describe('posts/[postId] route', () => {
+describe('tags/[tagId] route', () => {
 	beforeEach(() => {
 		routeMocks.requireApiSession.mockReset();
 		routeMocks.connectMongoose.mockReset();
@@ -70,8 +72,13 @@ describe('posts/[postId] route', () => {
 		routeMocks.loggerError.mockReset();
 		routeMocks.loggerWarn.mockReset();
 		routeMocks.encrypt.mockReset();
+		routeMocks.decrypt.mockReset();
 		routeMocks.updateOne.mockReset();
 		routeMocks.deleteOne.mockReset();
+	});
+
+	it('uses the node runtime', () => {
+		expect(runtime).toBe('nodejs');
 	});
 
 	describe('PUT', () => {
@@ -85,9 +92,9 @@ describe('posts/[postId] route', () => {
 			});
 
 			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'Updated title',
-					body: 'Updated body',
+				jsonRequest('http://localhost/api/tags/unauthorized', {
+					text: 'Work',
+					color: '#ffcc00',
 				}),
 				params(),
 			);
@@ -99,7 +106,7 @@ describe('posts/[postId] route', () => {
 			expect(routeMocks.updateOne).not.toHaveBeenCalled();
 		});
 
-		it('returns 400 and logs when readJsonWithLimit throws', async () => {
+		it('returns 400 and logs tag metadata when readJsonWithLimit throws', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
@@ -108,23 +115,19 @@ describe('posts/[postId] route', () => {
 			const readerError = new Error('Invalid JSON');
 			routeMocks.readJsonWithLimit.mockRejectedValue(readerError);
 
-			const request = jsonRequest('http://localhost/api/posts/post-1', {
-				title: 'Updated title',
-				body: 'Updated body',
+			const request = jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+				text: 'Work',
+				color: '#ffcc00',
 			});
 
 			const response = await PUT(request, params());
 
-			expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(
-				request,
-				32 * 1024,
-			);
+			expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 1024);
 			expect(routeMocks.loggerWarn).toHaveBeenCalledWith(
-				'Rejected post payload',
+				'Rejected tag payload',
 				{
 					error: readerError,
-					postId: VALID_POST_ID,
-					route: 'PUT /api/posts/[postId]',
+					route: `PUT /api/tags/${VALID_TAG_ID}`,
 					status: 400,
 				},
 			);
@@ -135,247 +138,151 @@ describe('posts/[postId] route', () => {
 			expect(await response.json()).toEqual({ message: 'Invalid JSON' });
 		});
 
-		it('rejects an invalid title', async () => {
+		it('rejects invalid tag payloads', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
 			});
 
-			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: '',
-				body: 'Updated body',
-			});
+			routeMocks.readJsonWithLimit
+				.mockResolvedValueOnce({ text: '', color: '#ffcc00' })
+				.mockResolvedValueOnce({ text: 'Work', color: 'yellow' });
 
-			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: '',
-					body: 'Updated body',
+			const badText = await PUT(
+				jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+					text: '',
+					color: '#ffcc00',
+				}),
+				params(),
+			);
+			const badColor = await PUT(
+				jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+					text: 'Work',
+					color: 'yellow',
 				}),
 				params(),
 			);
 
-			expect(response.status).toBe(400);
-			expect(await response.json()).toEqual({ message: 'Invalid title' });
+			expect(badText.status).toBe(400);
+			expect(await badText.json()).toEqual({ message: 'Invalid text' });
+
+			expect(badColor.status).toBe(400);
+			expect(await badColor.json()).toEqual({ message: 'Invalid color' });
+
 			expect(routeMocks.encrypt).not.toHaveBeenCalled();
 			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 			expect(routeMocks.updateOne).not.toHaveBeenCalled();
 		});
 
-		it('rejects a title longer than 200 characters', async () => {
+		it('returns 404 and skips Mongo when the tag id is malformed', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
 			});
 
 			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'a'.repeat(201),
-				body: 'Updated body',
+				text: 'Work',
+				color: '#ffcc00',
 			});
 
 			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'a'.repeat(201),
-					body: 'Updated body',
+				jsonRequest('http://localhost/api/tags/not-an-id', {
+					text: 'Work',
+					color: '#ffcc00',
 				}),
-				params(),
-			);
-
-			expect(response.status).toBe(400);
-			expect(await response.json()).toEqual({ message: 'Invalid title' });
-			expect(routeMocks.encrypt).not.toHaveBeenCalled();
-			expect(routeMocks.updateOne).not.toHaveBeenCalled();
-		});
-
-		it('rejects an invalid body', async () => {
-			routeMocks.requireApiSession.mockResolvedValue({
-				session: { user: { id: 'user-1' } },
-				errorResponse: null,
-			});
-
-			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'Updated title',
-				body: '',
-			});
-
-			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'Updated title',
-					body: '',
-				}),
-				params(),
-			);
-
-			expect(response.status).toBe(400);
-			expect(await response.json()).toEqual({ message: 'Invalid content' });
-			expect(routeMocks.encrypt).not.toHaveBeenCalled();
-			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
-			expect(routeMocks.updateOne).not.toHaveBeenCalled();
-		});
-
-		it('rejects a body longer than 20000 characters', async () => {
-			routeMocks.requireApiSession.mockResolvedValue({
-				session: { user: { id: 'user-1' } },
-				errorResponse: null,
-			});
-
-			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'Updated title',
-				body: 'a'.repeat(20_001),
-			});
-
-			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'Updated title',
-					body: 'a'.repeat(20_001),
-				}),
-				params(),
-			);
-
-			expect(response.status).toBe(400);
-			expect(await response.json()).toEqual({ message: 'Invalid content' });
-			expect(routeMocks.encrypt).not.toHaveBeenCalled();
-			expect(routeMocks.updateOne).not.toHaveBeenCalled();
-		});
-
-		it('returns 404 and skips Mongo when the post id is malformed', async () => {
-			routeMocks.requireApiSession.mockResolvedValue({
-				session: { user: { id: 'user-1' } },
-				errorResponse: null,
-			});
-
-			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'Updated title',
-				body: 'Updated body',
-			});
-
-			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/not-an-id', {
-					title: 'Updated title',
-					body: 'Updated body',
-				}),
-				params(INVALID_POST_ID),
+				params(INVALID_TAG_ID),
 			);
 
 			expect(response.status).toBe(404);
-			expect(await response.json()).toEqual({ message: 'Post not found' });
+			expect(await response.json()).toEqual({ message: 'Tag not found' });
 			expect(routeMocks.encrypt).not.toHaveBeenCalled();
 			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 			expect(routeMocks.updateOne).not.toHaveBeenCalled();
 			expect(routeMocks.loggerError).not.toHaveBeenCalled();
 		});
 
-		it('encrypts and updates the post on valid PUT', async () => {
+		it('encrypts and updates the tag on valid PUT', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
 			});
 
 			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: '  Updated title  ',
-				body: '  Updated body  ',
+				text: '  Work  ',
+				color: '  #ffcc00  ',
 			});
 
-			routeMocks.encrypt
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv1'),
-					ct: Buffer.from('ct1'),
-					tag: Buffer.from('tag1'),
-				})
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv2'),
-					ct: Buffer.from('ct2'),
-					tag: Buffer.from('tag2'),
-				});
+			routeMocks.encrypt.mockResolvedValue({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv1'),
+				ct: Buffer.from('ct1'),
+				tag: Buffer.from('tag1'),
+			});
 
 			routeMocks.connectMongoose.mockResolvedValue(undefined);
 			routeMocks.updateOne.mockResolvedValue({ modifiedCount: 1 });
 
-			const request = jsonRequest('http://localhost/api/posts/post-1', {
-				title: '  Updated title  ',
-				body: '  Updated body  ',
+			const request = jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+				text: '  Work  ',
+				color: '  #ffcc00  ',
 			});
 
-			const response = await PUT(request, params(VALID_POST_ID));
+			const response = await PUT(request, params());
 
-			expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(
-				request,
-				32 * 1024,
-			);
-			expect(routeMocks.encrypt).toHaveBeenNthCalledWith(
-				1,
-				'Updated title',
-				'user-1',
-			);
-			expect(routeMocks.encrypt).toHaveBeenNthCalledWith(
-				2,
-				'Updated body',
-				'user-1',
-			);
+			expect(routeMocks.readJsonWithLimit).toHaveBeenCalledWith(request, 1024);
+			expect(routeMocks.encrypt).toHaveBeenCalledWith('Work', 'user-1');
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.updateOne).toHaveBeenCalledWith(
-				{ _id: VALID_POST_ID, authorId: 'user-1' },
+				{ _id: VALID_TAG_ID, authorId: 'user-1' },
 				{
-					titleEnc: {
+					textEnc: {
 						v: 1,
 						alg: 'aes-256-gcm',
 						iv: Buffer.from('iv1'),
 						ct: Buffer.from('ct1'),
 						tag: Buffer.from('tag1'),
 					},
-					bodyEnc: {
-						v: 1,
-						alg: 'aes-256-gcm',
-						iv: Buffer.from('iv2'),
-						ct: Buffer.from('ct2'),
-						tag: Buffer.from('tag2'),
-					},
+					color: '#ffcc00',
 				},
 			);
 			expect(response.status).toBe(200);
-			expect(await response.json()).toEqual({ _id: VALID_POST_ID });
+			expect(await response.json()).toEqual({ _id: VALID_TAG_ID });
 		});
 
-		it('returns 404 when the post to update is not found', async () => {
+		it('returns 404 when the tag to update is not found', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
 			});
 
 			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'Updated title',
-				body: 'Updated body',
+				text: 'Work',
+				color: '#ffcc00',
 			});
 
-			routeMocks.encrypt
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv1'),
-					ct: Buffer.from('ct1'),
-					tag: Buffer.from('tag1'),
-				})
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv2'),
-					ct: Buffer.from('ct2'),
-					tag: Buffer.from('tag2'),
-				});
+			routeMocks.encrypt.mockResolvedValue({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv1'),
+				ct: Buffer.from('ct1'),
+				tag: Buffer.from('tag1'),
+			});
+
+			routeMocks.connectMongoose.mockResolvedValue(undefined);
 			routeMocks.updateOne.mockResolvedValue({
 				matchedCount: 0,
 				modifiedCount: 0,
 			});
 
 			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'Updated title',
-					body: 'Updated body',
+				jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+					text: 'Work',
+					color: '#ffcc00',
 				}),
 				params(),
 			);
 
 			expect(response.status).toBe(404);
-			expect(await response.json()).toEqual({ message: 'Post not found' });
+			expect(await response.json()).toEqual({ message: 'Tag not found' });
 		});
 
 		it('returns 500 and logs when updateOne throws', async () => {
@@ -385,31 +292,25 @@ describe('posts/[postId] route', () => {
 			});
 
 			routeMocks.readJsonWithLimit.mockResolvedValue({
-				title: 'Updated title',
-				body: 'Updated body',
+				text: 'Work',
+				color: '#ffcc00',
 			});
 
-			routeMocks.encrypt
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv1'),
-					ct: Buffer.from('ct1'),
-					tag: Buffer.from('tag1'),
-				})
-				.mockResolvedValueOnce({
-					alg: 'aes-256-gcm',
-					iv: Buffer.from('iv2'),
-					ct: Buffer.from('ct2'),
-					tag: Buffer.from('tag2'),
-				});
+			routeMocks.encrypt.mockResolvedValue({
+				alg: 'aes-256-gcm',
+				iv: Buffer.from('iv1'),
+				ct: Buffer.from('ct1'),
+				tag: Buffer.from('tag1'),
+			});
 
 			const updateError = new Error('Mongo update failed');
+			routeMocks.connectMongoose.mockResolvedValue(undefined);
 			routeMocks.updateOne.mockRejectedValue(updateError);
 
 			const response = await PUT(
-				jsonRequest('http://localhost/api/posts/post-1', {
-					title: 'Updated title',
-					body: 'Updated body',
+				jsonRequest(`http://localhost/api/tags/${VALID_TAG_ID}`, {
+					text: 'Work',
+					color: '#ffcc00',
 				}),
 				params(),
 			);
@@ -417,18 +318,17 @@ describe('posts/[postId] route', () => {
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.updateOne).toHaveBeenCalledTimes(1);
 			expect(routeMocks.loggerError).toHaveBeenCalledWith(
-				'Failed to update post',
+				'Failed to update tag',
 				{
 					authorId: 'user-1',
 					error: updateError,
-					postId: VALID_POST_ID,
-					route: 'PUT /api/posts/[postId]',
+					route: `PUT /api/tags/${VALID_TAG_ID}`,
 					status: 500,
 				},
 			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
-				message: 'Unable to update the post',
+				message: 'Unable to update the tag',
 			});
 		});
 	});
@@ -444,7 +344,7 @@ describe('posts/[postId] route', () => {
 			});
 
 			const response = await DELETE(
-				new Request('http://localhost/api/posts/post-1', {
+				new Request(`http://localhost/api/tags/${VALID_TAG_ID}`, {
 					method: 'DELETE',
 				}),
 				params(),
@@ -455,27 +355,27 @@ describe('posts/[postId] route', () => {
 			expect(routeMocks.deleteOne).not.toHaveBeenCalled();
 		});
 
-		it('returns 404 and skips Mongo when the post id is malformed', async () => {
+		it('returns 404 and skips Mongo when the tag id is malformed', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
 			});
 
 			const response = await DELETE(
-				new Request('http://localhost/api/posts/not-an-id', {
+				new Request('http://localhost/api/tags/not-an-id', {
 					method: 'DELETE',
 				}),
-				params(INVALID_POST_ID),
+				params(INVALID_TAG_ID),
 			);
 
 			expect(response.status).toBe(404);
-			expect(await response.json()).toEqual({ message: 'Post not found' });
+			expect(await response.json()).toEqual({ message: 'Tag not found' });
 			expect(routeMocks.connectMongoose).not.toHaveBeenCalled();
 			expect(routeMocks.deleteOne).not.toHaveBeenCalled();
 			expect(routeMocks.loggerError).not.toHaveBeenCalled();
 		});
 
-		it('deletes the post on valid DELETE', async () => {
+		it('deletes the tag on valid DELETE', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
@@ -485,22 +385,22 @@ describe('posts/[postId] route', () => {
 			routeMocks.deleteOne.mockResolvedValue({ deletedCount: 1 });
 
 			const response = await DELETE(
-				new Request('http://localhost/api/posts/post-1', {
+				new Request(`http://localhost/api/tags/${VALID_TAG_ID}`, {
 					method: 'DELETE',
 				}),
-				params(VALID_POST_ID),
+				params(),
 			);
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.deleteOne).toHaveBeenCalledWith({
-				_id: VALID_POST_ID,
+				_id: VALID_TAG_ID,
 				authorId: 'user-1',
 			});
 			expect(response.status).toBe(200);
-			expect(await response.json()).toEqual({ _id: VALID_POST_ID });
+			expect(await response.json()).toEqual({ _id: VALID_TAG_ID });
 		});
 
-		it('returns 404 when the post to delete is not found', async () => {
+		it('returns 404 when the tag to delete is not found', async () => {
 			routeMocks.requireApiSession.mockResolvedValue({
 				session: { user: { id: 'user-1' } },
 				errorResponse: null,
@@ -510,14 +410,14 @@ describe('posts/[postId] route', () => {
 			routeMocks.deleteOne.mockResolvedValue({ deletedCount: 0 });
 
 			const response = await DELETE(
-				new Request('http://localhost/api/posts/post-1', {
+				new Request(`http://localhost/api/tags/${VALID_TAG_ID}`, {
 					method: 'DELETE',
 				}),
-				params(VALID_POST_ID),
+				params(),
 			);
 
 			expect(response.status).toBe(404);
-			expect(await response.json()).toEqual({ message: 'Post not found' });
+			expect(await response.json()).toEqual({ message: 'Tag not found' });
 		});
 
 		it('returns 500 and logs when deleteOne throws', async () => {
@@ -527,33 +427,33 @@ describe('posts/[postId] route', () => {
 			});
 
 			const deleteError = new Error('Mongo delete failed');
+			routeMocks.connectMongoose.mockResolvedValue(undefined);
 			routeMocks.deleteOne.mockRejectedValue(deleteError);
 
 			const response = await DELETE(
-				new Request('http://localhost/api/posts/post-1', {
+				new Request(`http://localhost/api/tags/${VALID_TAG_ID}`, {
 					method: 'DELETE',
 				}),
-				params(VALID_POST_ID),
+				params(),
 			);
 
 			expect(routeMocks.connectMongoose).toHaveBeenCalledTimes(1);
 			expect(routeMocks.deleteOne).toHaveBeenCalledWith({
-				_id: VALID_POST_ID,
+				_id: VALID_TAG_ID,
 				authorId: 'user-1',
 			});
 			expect(routeMocks.loggerError).toHaveBeenCalledWith(
-				'Failed to delete post',
+				'Failed to delete tag',
 				{
 					authorId: 'user-1',
 					error: deleteError,
-					postId: VALID_POST_ID,
-					route: 'DELETE /api/posts/[postId]',
+					route: `DELETE /api/tags/${VALID_TAG_ID}`,
 					status: 500,
 				},
 			);
 			expect(response.status).toBe(500);
 			expect(await response.json()).toEqual({
-				message: 'Unable to delete post',
+				message: 'Unable to delete tag',
 			});
 		});
 	});

@@ -5,6 +5,7 @@ import {
 import { Tags } from '@/features/tags/server/tag.model';
 import type { TagContent, TagPayloadResult } from '@/features/tags/types';
 import { connectMongoose } from '@/shared/database/mongoose';
+import { isValidMongoObjectId } from '@/shared/database/object-id';
 import { decrypt, encrypt } from '@/shared/security/encryption/aes-256-gcm';
 import { readJsonWithLimit } from '@/shared/utils/json';
 
@@ -92,4 +93,37 @@ export async function getTagsForAuthor(authorId: string) {
 			return { ...rest, text };
 		}),
 	);
+}
+
+export async function updateTagForAuthor(
+	tagId: string,
+	authorId: string,
+	payload: TagContent,
+) {
+	if (!isValidMongoObjectId(tagId)) {
+		return false;
+	}
+
+	const encryptedFields = await encryptText(payload.text, authorId);
+
+	await connectMongoose();
+
+	const result = await Tags.updateOne(
+		{ _id: tagId, authorId },
+		{ ...encryptedFields, color: payload.color },
+	);
+
+	return result.matchedCount > 0 || result.modifiedCount > 0;
+}
+
+export async function deleteTagForAuthor(tagId: string, authorId: string) {
+	if (!isValidMongoObjectId(tagId)) {
+		return false;
+	}
+
+	await connectMongoose();
+
+	const result = await Tags.deleteOne({ _id: tagId, authorId });
+
+	return result.deletedCount > 0;
 }

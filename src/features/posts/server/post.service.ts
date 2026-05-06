@@ -16,6 +16,7 @@ import {
 	POSTS_MAX_PAGE_LIMIT,
 } from '@/features/posts/constants';
 import { AuthorPostsFilter } from '@/shared/database/types';
+import { isValidMongoObjectId } from '@/shared/database/object-id';
 
 function buildAuthorPostsFilter(
 	authorId: string,
@@ -77,6 +78,10 @@ export async function updatePostForAuthor(
 	authorId: string,
 	payload: PostContent,
 ) {
+	if (!isValidMongoObjectId(postId)) {
+		return false;
+	}
+
 	const encryptedFields = await encryptPostFields(payload, authorId);
 
 	await connectMongoose();
@@ -93,6 +98,10 @@ export async function updatePostForAuthor(
  * Deletes a post only when it belongs to the authenticated user.
  */
 export async function deletePostForAuthor(postId: string, authorId: string) {
+	if (!isValidMongoObjectId(postId)) {
+		return false;
+	}
+
 	await connectMongoose();
 
 	const result = await Posts.deleteOne({
