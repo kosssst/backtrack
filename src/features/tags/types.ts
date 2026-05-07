@@ -1,3 +1,5 @@
+import type { InputWrapperProps } from '@mantine/core';
+
 export type TagContent = {
 	text: string;
 	color: string;
@@ -20,3 +22,20 @@ export type TagPayloadResult =
 			message: string;
 			cause?: unknown;
 	  };
+
+export type TagsModalProps = {
+	opened: boolean;
+	onClose: () => void;
+};
+
+export type TagColorPickerProps = Omit<
+	InputWrapperProps,
+	'children' | 'defaultValue' | 'onChange' | 'value'
+> & {
+	defaultColors?: string[];
+	value?: string;
+	defaultValue?: string;
+	onChange?: (color: string) => void;
+	disabled?: boolean;
+	name?: string;
+};

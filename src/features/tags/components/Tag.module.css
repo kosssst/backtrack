@@ -1,0 +1,9 @@
+.modalTitle {
+	font-size: 25px;
+}
+
+.selectedSwatch {
+	box-shadow:
+		0 0 0 1px var(--mantine-color-body),
+		0 0 0 4px var(--mantine-color-blue-6);
+}
