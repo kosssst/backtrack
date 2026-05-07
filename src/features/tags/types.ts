@@ -1,5 +1,3 @@
-import type { InputWrapperProps } from '@mantine/core';
-
 export type TagContent = {
 	text: string;
 	color: string;
@@ -28,14 +26,22 @@ export type TagsModalProps = {
 	onClose: () => void;
 };
 
-export type TagColorPickerProps = Omit<
-	InputWrapperProps,
-	'children' | 'defaultValue' | 'onChange' | 'value'
-> & {
-	defaultColors?: string[];
-	value?: string;
-	defaultValue?: string;
-	onChange?: (color: string) => void;
-	disabled?: boolean;
-	name?: string;
+type BaseTagFormProps = {
+	onSuccess: (values: TagContent) => void;
+	onCancel: () => void;
+	onFailure: () => void;
 };
+
+type CreateTagModeProps = BaseTagFormProps & {
+	mode?: 'create';
+	tagId?: never;
+	initialValues?: Partial<TagContent>;
+};
+
+type EditTagModeProps = BaseTagFormProps & {
+	mode: 'edit';
+	tagId: string;
+	initialValues: TagContent;
+};
+
+export type TagFormProps = CreateTagModeProps | EditTagModeProps;

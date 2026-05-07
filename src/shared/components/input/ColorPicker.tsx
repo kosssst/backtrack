@@ -1,10 +1,28 @@
 'use client';
 
-import { TagColorPickerProps } from '@/features/tags/types';
-import { ColorPicker, ColorSwatch, Group, Input, Menu } from '@mantine/core';
+import type { InputWrapperProps } from '@mantine/core';
+import {
+	ColorPicker as MantineColorPicker,
+	ColorSwatch,
+	Group,
+	Input,
+	Menu,
+} from '@mantine/core';
 import { useUncontrolled } from '@mantine/hooks';
 import type { FocusEventHandler } from 'react';
-import classes from '@/features/tags/components/Tag.module.css';
+import classes from '@/shared/components/input/ColorPicker.module.css';
+
+export type ColorPickerProps = Omit<
+	InputWrapperProps,
+	'children' | 'defaultValue' | 'onChange' | 'value'
+> & {
+	defaultColors?: string[];
+	value?: string;
+	defaultValue?: string;
+	onChange?: (color: string) => void;
+	disabled?: boolean;
+	name?: string;
+};
 
 const DEFAULT_TAG_COLORS = [
 	'#ef4444',
@@ -17,7 +35,7 @@ const DEFAULT_TAG_COLORS = [
 	'#8b5cf6',
 ];
 
-export function TagColorPicker(props: TagColorPickerProps) {
+export function ColorPicker(props: ColorPickerProps) {
 	const {
 		defaultColors = DEFAULT_TAG_COLORS,
 		value: valueProp,
@@ -115,7 +133,7 @@ export function TagColorPicker(props: TagColorPickerProps) {
 						/>
 					</Menu.Target>
 					<Menu.Dropdown>
-						<ColorPicker
+						<MantineColorPicker
 							format="hex"
 							value={customSwatchColor}
 							onChange={(color) => {

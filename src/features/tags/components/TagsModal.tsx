@@ -1,9 +1,25 @@
 import { TagsModalProps } from '@/features/tags/types';
 import { Group, Modal, Stack, Text } from '@mantine/core';
 import classes from '@/features/tags/components/Tag.module.css';
-import { CreateTagForm } from '@/features/tags/components/CreateTagForm';
+import { TagForm } from '@/features/tags/components/TagForm';
+import {
+	showFailure,
+	showSuccess,
+} from '@/shared/notifications/app-notifications';
 
 export function TagsModal(props: TagsModalProps) {
+	const handleCreated = () => {
+		showSuccess('Tag created successfully');
+		props.onClose();
+	};
+
+	const handleFailed = () => {
+		showFailure(
+			'Please check your details and try again.',
+			'Tag creation failed',
+		);
+	};
+
 	return (
 		<Modal.Root
 			opened={props.opened}
@@ -27,7 +43,11 @@ export function TagsModal(props: TagsModalProps) {
 					</Stack>
 				</Modal.Header>
 				<Modal.Body>
-					<CreateTagForm />
+					<TagForm
+						onSuccess={handleCreated}
+						onCancel={props.onClose}
+						onFailure={handleFailed}
+					/>
 				</Modal.Body>
 			</Modal.Content>
 		</Modal.Root>
